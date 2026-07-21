@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HireFlow — Hiring & Onboarding · Velogorithm</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --navy: #0B1F3A; --gold: #C8941E; --gold-pale: #F5CC74; --sand: #F6F1E7; --leaf: #4A7C59; }
+  body { background: #FAFAF7; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial; color: #1A1A1A; }
+  .navy { color: var(--navy); }
+  .bg-navy { background: var(--navy); }
+  .gold { color: var(--gold); }
+  .bg-gold { background: var(--gold); }
+  .border-gold { border-color: var(--gold); }
+  .nav-active { background: var(--navy); color: white; }
+  .tab-active { color: var(--navy); border-bottom-color: var(--gold); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .pill-applied { background: #DBEAFE; color: #1E40AF; }
+  .pill-screening { background: #FEF3C7; color: #92400E; }
+  .pill-interview { background: #F3E8FF; color: #6B21A8; }
+  .pill-offered { background: #E0F2FE; color: #075985; }
+  .pill-hired { background: #D1FAE5; color: #065F46; }
+  .pill-rejected { background: #FEE2E2; color: #991B1B; }
+  .pill-onboarding { background: #FEF3C7; color: #92400E; }
+  .pill-active { background: #D1FAE5; color: #065F46; }
+  .pill-synced { background: #C7D2FE; color: #3730A3; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+// ===== Seed Data =====
+const SEED = {
+  company: { name: 'Demo Care Services', sector: 'Home care', city: 'Edmonton, AB' },
+  shiftFlowSync: { enabled: false, tenantSlug: 'demo-care', lastSync: null },
+  jobs: [
+    { id: 'j1', title: 'Personal Support Worker — Day Shift', dept: 'Care', location: 'Edmonton', status: 'open', postedDate: '2026-05-20', applicantCount: 8, requirements: 'PSW certificate, valid Class 5 license, CPR-C' },
+    { id: 'j2', title: 'Registered Nurse — Casual', dept: 'Care', location: 'Edmonton', status: 'open', postedDate: '2026-06-01', applicantCount: 3, requirements: 'CRNA license, 2+ yrs LTC experience' },
+    { id: 'j3', title: 'Activity Coordinator', dept: 'Programs', location: 'Sherwood Park', status: 'open', postedDate: '2026-06-05', applicantCount: 5, requirements: 'Recreation diploma, programming experience' },
+    { id: 'j4', title: 'Maintenance Technician', dept: 'Facilities', location: 'Edmonton', status: 'draft', postedDate: '2026-06-10', applicantCount: 0, requirements: 'Trade ticket, HVAC experience preferred' },
+    { id: 'j5', title: 'Dietary Aide', dept: 'Food Services', location: 'Edmonton', status: 'closed', postedDate: '2026-04-15', applicantCount: 12, requirements: 'Food Safe certification' },
+  ],
+  applicants: [
+    { id: 'a1',  name: 'Maria Santos',      email: 'maria.s@email.com',     phone: '587-555-0201', jobId: 'j1', status: 'hired',     notes: 'Strong references. PSW + CPR current.', appliedDate: '2026-05-22', certifications: ['PSW', 'CPR-C', 'First Aid'] },
+    { id: 'a2',  name: 'Sofia Reyes',       email: 'sofia.r@email.com',     phone: '587-555-0202', jobId: 'j1', status: 'offered',   notes: 'Excellent interview. Awaiting offer signature.', appliedDate: '2026-05-23', certifications: ['PSW', 'CPR-C'] },
+    { id: 'a3',  name: 'Kelsey Cardinal',   email: 'kelsey.c@email.com',    phone: '587-555-0203', jobId: 'j1', status: 'interview', notes: 'Speaks Cree — major plus for our cultural clients.', appliedDate: '2026-05-25', certifications: ['PSW', 'First Aid'] },
+    { id: 'a4',  name: 'Jacob Tanner',      email: 'jacob.t@email.com',     phone: '587-555-0204', jobId: 'j1', status: 'screening', notes: 'Needs PSW cert verification.', appliedDate: '2026-06-02', certifications: ['CPR-C'] },
+    { id: 'a5',  name: 'Priya Patel',       email: 'priya.p@email.com',     phone: '587-555-0205', jobId: 'j1', status: 'applied',   notes: '', appliedDate: '2026-06-08', certifications: ['PSW', 'CPR-C'] },
+    { id: 'a6',  name: 'Wei Chen',          email: 'wei.c@email.com',       phone: '587-555-0206', jobId: 'j2', status: 'screening', notes: 'RN, 4 yrs experience. Strong candidate.', appliedDate: '2026-06-03', certifications: ['RN', 'BCLS'] },
+    { id: 'a7',  name: 'Amina Hassan',      email: 'amina.h@email.com',     phone: '587-555-0207', jobId: 'j2', status: 'interview', notes: 'Second interview scheduled.', appliedDate: '2026-06-04', certifications: ['RN', 'BCLS', 'Geriatric Care'] },
+    { id: 'a8',  name: 'Brendan Walsh',     email: 'brendan.w@email.com',   phone: '587-555-0208', jobId: 'j3', status: 'applied',   notes: '', appliedDate: '2026-06-07', certifications: ['Recreation Therapy Diploma'] },
+    { id: 'a9',  name: 'Naomi Whitehorse',  email: 'naomi.w@email.com',     phone: '587-555-0209', jobId: 'j3', status: 'screening', notes: 'Strong portfolio. Indigenous arts background.', appliedDate: '2026-06-08', certifications: ['Recreation Therapy', 'Cultural Programming'] },
+    { id: 'a10', name: 'Liam Roberts',      email: 'liam.r@email.com',      phone: '587-555-0210', jobId: 'j1', status: 'rejected',  notes: 'No PSW cert, no plan to obtain.', appliedDate: '2026-05-27', certifications: [] },
+    { id: 'a11', name: 'Hannah Kim',        email: 'hannah.k@email.com',    phone: '587-555-0211', jobId: 'j2', status: 'applied',   notes: '', appliedDate: '2026-06-09', certifications: ['RN'] },
+    { id: 'a12', name: 'Diego Martinez',    email: 'diego.m@email.com',     phone: '587-555-0212', jobId: 'j3', status: 'interview', notes: 'Available evenings + weekends.', appliedDate: '2026-06-05', certifications: ['Recreation Diploma'] },
+  ],
+  interviews: [
+    { id: 'i1', applicantId: 'a3',  scheduledFor: '2026-06-15T10:00', type: 'In-person', interviewers: 'Sandra Khoury, Tom Hart', outcome: 'pending', notes: '' },
+    { id: 'i2', applicantId: 'a7',  scheduledFor: '2026-06-12T14:00', type: 'Video',     interviewers: 'Sandra Khoury',          outcome: 'pass',    notes: 'Strong fit. Move to offer.' },
+    { id: 'i3', applicantId: 'a12', scheduledFor: '2026-06-13T11:00', type: 'In-person', interviewers: 'Mei Lin',                outcome: 'pending', notes: '' },
+  ],
+  offers: [
+    { id: 'o1', applicantId: 'a1', salary: '24.50/hr',     startDate: '2026-06-20', status: 'signed',   sentDate: '2026-06-08', notes: 'Day shift, 32 hr/week guaranteed.' },
+    { id: 'o2', applicantId: 'a2', salary: '24.50/hr',     startDate: '2026-06-22', status: 'sent',     sentDate: '2026-06-10', notes: 'Awaiting signature.' },
+    { id: 'o3', applicantId: 'a7', salary: '42.00/hr',     startDate: '2026-07-01', status: 'draft',    sentDate: null,         notes: 'Casual RN — finalize hours.' },
+  ],
+  onboarding: [
+    { id: 'ob1', applicantId: 'a1', startDate: '2026-06-20', progress: 60, tasks: [
+      { name: 'Personal info form', done: true },
+      { name: 'Direct deposit setup', done: true },
+      { name: 'Emergency contacts', done: true },
+      { name: 'PIPEDA consent', done: true },
+      { name: 'CPR / First Aid cert upload', done: true },
+      { name: 'Code of conduct signed', done: false },
+      { name: 'Watch orientation video (45 min)', done: false },
+      { name: 'Shadow shift booked (Day 1)', done: false },
+      { name: 'Uniform sizing', done: false },
+      { name: 'Login created for ShiftFlow', done: false },
+    ]},
+  ],
+  hires: [], // populated when onboarding completes
+};
+
+// ===== Helpers =====
+const STATUS_LABEL = { applied: 'Applied', screening: 'Screening', interview: 'Interview', offered: 'Offered', hired: 'Hired', rejected: 'Rejected' };
+const STATUS_PILL = { applied: 'pill-applied', screening: 'pill-screening', interview: 'pill-interview', offered: 'pill-offered', hired: 'pill-hired', rejected: 'pill-rejected' };
+const STATUS_FLOW = ['applied', 'screening', 'interview', 'offered', 'hired'];
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function fmtTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-CA', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+// ===== Logo =====
+const Logo = ({ size = 28 }) => (
+  <svg width={size} height={size*0.9} viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="vg" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#A06A1A"/><stop offset="40%" stopColor="#C8941E"/>
+      <stop offset="75%" stopColor="#E8B14A"/><stop offset="100%" stopColor="#F5CC74"/>
+    </linearGradient></defs>
+    <path fill="url(#vg)" d="M 60 90 L 135 90 L 200 250 L 265 90 L 340 90 L 200 340 Z"/>
+    <path fill="url(#vg)" d="M 240 90 L 280 10 L 305 60 L 322 30 L 348 90 Z"/>
+  </svg>
+);
+
+// ===== Dashboard =====
+function Dashboard({ state }) {
+  const openJobs = state.jobs.filter(j => j.status === 'open').length;
+  const inFunnel = state.applicants.filter(a => !['hired','rejected'].includes(a.status)).length;
+  const interviewsThisWeek = state.interviews.filter(i => i.outcome === 'pending').length;
+  const offersOutstanding = state.offers.filter(o => o.status === 'sent').length;
+  const onboardingActive = state.onboarding.filter(ob => ob.progress < 100).length;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Today</div>
+        <h1 className="text-3xl font-bold navy">Hiring overview</h1>
+        <p className="text-gray-500 italic text-sm mt-1">{state.company.name} · {state.company.sector} · {state.company.city}</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {[
+          { label: 'Open jobs',           value: openJobs,           sub: 'currently posted' },
+          { label: 'In funnel',           value: inFunnel,           sub: 'applied → offered' },
+          { label: 'Interviews pending',  value: interviewsThisWeek, sub: 'this week' },
+          { label: 'Offers outstanding',  value: offersOutstanding,  sub: 'awaiting signature' },
+          { label: 'Onboarding',          value: onboardingActive,   sub: 'in progress' },
+        ].map((k, i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="text-xs uppercase tracking-wider text-gray-500 font-semibold">{k.label}</div>
+            <div className="text-3xl font-bold navy mt-1">{k.value}</div>
+            <div className="text-xs text-gray-500 mt-0.5">{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card title="Funnel by stage">
+          <div className="space-y-2">
+            {STATUS_FLOW.map(s => {
+              const n = state.applicants.filter(a => a.status === s).length;
+              const pct = state.applicants.length ? (n / state.applicants.length) * 100 : 0;
+              return (
+                <div key={s} className="flex items-center gap-2">
+                  <div className="w-24 text-sm">{STATUS_LABEL[s]}</div>
+                  <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                    <div className="bg-gold h-full" style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="w-8 text-right text-sm font-medium navy">{n}</div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card title="ShiftFlow sync status">
+          {state.shiftFlowSync.enabled ? (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="pill pill-synced">CONNECTED</span>
+                <span className="text-sm text-gray-600">Tenant: <span className="font-mono">{state.shiftFlowSync.tenantSlug}</span></span>
+              </div>
+              <p className="text-sm text-gray-600">When onboarding completes, the new hire is automatically created in ShiftFlow with their shifts, certifications, and leave balances. Shared audit trail.</p>
+              <p className="text-xs text-gray-400 mt-2">Last sync: {state.shiftFlowSync.lastSync ? fmtTime(state.shiftFlowSync.lastSync) : 'never'}</p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="pill bg-gray-100 text-gray-600">NOT CONNECTED</span>
+              </div>
+              <p className="text-sm text-gray-600">HireFlow is operating in standalone mode. Onboarded hires can be exported as CSV to import into your T&A system manually.</p>
+              <p className="text-xs text-gray-400 mt-2">Enable in Settings → ShiftFlow integration to auto-create employees.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Card title="Recent activity">
+        <ul className="text-sm space-y-1.5">
+          <li><span className="text-gray-500">Today</span> · Maria Santos signed her offer letter. Onboarding started.</li>
+          <li><span className="text-gray-500">Yesterday</span> · Amina Hassan passed second interview. Move to offer stage.</li>
+          <li><span className="text-gray-500">2 days ago</span> · 3 new applications received for PSW — Day Shift.</li>
+          <li><span className="text-gray-500">3 days ago</span> · Sofia Reyes received offer letter (awaiting signature).</li>
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Jobs =====
+function Jobs({ state, setState }) {
+  const [showNew, setShowNew] = useState(false);
+  const [newJob, setNewJob] = useState({ title: '', dept: '', location: '', requirements: '' });
+
+  const addJob = () => {
+    if (!newJob.title.trim()) return;
+    const j = { id: 'j' + Date.now(), ...newJob, status: 'draft', postedDate: new Date().toISOString().slice(0,10), applicantCount: 0 };
+    setState({ ...state, jobs: [...state.jobs, j] });
+    setNewJob({ title: '', dept: '', location: '', requirements: '' });
+    setShowNew(false);
+  };
+
+  const updateStatus = (jobId, status) => {
+    setState({ ...state, jobs: state.jobs.map(j => j.id === jobId ? { ...j, status } : j) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Jobs</div>
+          <h1 className="text-3xl font-bold navy">Open positions</h1>
+        </div>
+        <button onClick={() => setShowNew(!showNew)} className="bg-navy text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90">
+          {showNew ? 'Cancel' : '+ Post a job'}
+        </button>
+      </div>
+
+      {showNew && (
+        <Card title="New job posting">
+          <div className="grid md:grid-cols-2 gap-3">
+            <Input label="Title"        value={newJob.title}        onChange={v => setNewJob({...newJob, title: v})} />
+            <Input label="Department"   value={newJob.dept}         onChange={v => setNewJob({...newJob, dept: v})} />
+            <Input label="Location"     value={newJob.location}     onChange={v => setNewJob({...newJob, location: v})} />
+            <Input label="Requirements" value={newJob.requirements} onChange={v => setNewJob({...newJob, requirements: v})} />
+          </div>
+          <button onClick={addJob} className="bg-gold text-white px-4 py-2 rounded-md text-sm font-medium mt-3 hover:opacity-90">Save as draft</button>
+        </Card>
+      )}
+
+      <Card title="All jobs">
+        <table className="w-full text-sm">
+          <thead className="border-b border-gray-200">
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+              <th className="py-2">Job</th>
+              <th>Dept</th>
+              <th>Location</th>
+              <th>Posted</th>
+              <th>Apps</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.jobs.map(j => (
+              <tr key={j.id} className="border-b border-gray-100">
+                <td className="py-3"><div className="font-medium navy">{j.title}</div><div className="text-xs text-gray-500">{j.requirements}</div></td>
+                <td>{j.dept}</td>
+                <td>{j.location}</td>
+                <td className="text-xs text-gray-600">{fmt(j.postedDate)}</td>
+                <td className="font-medium">{j.applicantCount}</td>
+                <td>
+                  <span className={`pill ${j.status === 'open' ? 'pill-active' : j.status === 'closed' ? 'pill-rejected' : 'bg-gray-100 text-gray-600'}`}>{j.status.toUpperCase()}</span>
+                </td>
+                <td className="text-right text-xs">
+                  {j.status !== 'open' && <button onClick={() => updateStatus(j.id, 'open')} className="text-blue-700 hover:underline mr-2">Publish</button>}
+                  {j.status === 'open' && <button onClick={() => updateStatus(j.id, 'closed')} className="text-gray-500 hover:underline">Close</button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Applicants =====
+function Applicants({ state, setState }) {
+  const [filter, setFilter] = useState('all');
+  const [selected, setSelected] = useState(null);
+
+  const filtered = state.applicants.filter(a => filter === 'all' || a.status === filter);
+
+  const updateStatus = (id, newStatus) => {
+    setState({ ...state, applicants: state.applicants.map(a => a.id === id ? { ...a, status: newStatus } : a) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Applicants</div>
+        <h1 className="text-3xl font-bold navy">Pipeline</h1>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        {['all', ...STATUS_FLOW, 'rejected'].map(s => (
+          <button key={s} onClick={() => setFilter(s)} className={`text-xs px-3 py-1 rounded-full ${filter === s ? 'bg-navy text-white' : 'bg-white border border-gray-200 text-gray-700'}`}>
+            {s === 'all' ? 'All' : STATUS_LABEL[s]} ({s === 'all' ? state.applicants.length : state.applicants.filter(a => a.status === s).length})
+          </button>
+        ))}
+      </div>
+
+      <Card title={`${filtered.length} candidate${filtered.length === 1 ? '' : 's'}`}>
+        <table className="w-full text-sm">
+          <thead className="border-b border-gray-200">
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+              <th className="py-2">Name</th>
+              <th>Job</th>
+              <th>Applied</th>
+              <th>Certs</th>
+              <th>Status</th>
+              <th>Advance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(a => {
+              const job = state.jobs.find(j => j.id === a.jobId);
+              const idx = STATUS_FLOW.indexOf(a.status);
+              const nextStatus = idx >= 0 && idx < STATUS_FLOW.length - 1 ? STATUS_FLOW[idx + 1] : null;
+              return (
+                <React.Fragment key={a.id}>
+                  <tr className="border-b border-gray-100 cursor-pointer hover:bg-gray-50" onClick={() => setSelected(selected === a.id ? null : a.id)}>
+                    <td className="py-3">
+                      <div className="font-medium navy">{a.name}</div>
+                      <div className="text-xs text-gray-500">{a.email}</div>
+                    </td>
+                    <td className="text-xs">{job?.title || '—'}</td>
+                    <td className="text-xs text-gray-600">{fmt(a.appliedDate)}</td>
+                    <td className="text-xs">{a.certifications.slice(0, 2).join(', ')}{a.certifications.length > 2 ? ` +${a.certifications.length - 2}` : ''}</td>
+                    <td><span className={`pill ${STATUS_PILL[a.status]}`}>{STATUS_LABEL[a.status]}</span></td>
+                    <td className="text-xs">
+                      {nextStatus && <button onClick={(e) => { e.stopPropagation(); updateStatus(a.id, nextStatus); }} className="text-blue-700 hover:underline">→ {STATUS_LABEL[nextStatus]}</button>}
+                      {a.status !== 'rejected' && a.status !== 'hired' && <button onClick={(e) => { e.stopPropagation(); updateStatus(a.id, 'rejected'); }} className="text-red-600 hover:underline ml-2">Reject</button>}
+                    </td>
+                  </tr>
+                  {selected === a.id && (
+                    <tr><td colSpan="6" className="bg-amber-50 px-4 py-3">
+                      <div className="text-sm">
+                        <div className="mb-1"><span className="text-gray-500">Phone:</span> {a.phone}</div>
+                        <div className="mb-1"><span className="text-gray-500">All certifications:</span> {a.certifications.join(', ') || '—'}</div>
+                        <div><span className="text-gray-500">Notes:</span> {a.notes || '—'}</div>
+                      </div>
+                    </td></tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Interviews =====
+function Interviews({ state, setState }) {
+  const setOutcome = (id, outcome) => {
+    setState({ ...state, interviews: state.interviews.map(i => i.id === id ? { ...i, outcome } : i) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Interviews</div>
+        <h1 className="text-3xl font-bold navy">Scheduled interviews</h1>
+      </div>
+
+      <Card title="Upcoming">
+        <table className="w-full text-sm">
+          <thead className="border-b border-gray-200">
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+              <th className="py-2">Candidate</th>
+              <th>When</th>
+              <th>Type</th>
+              <th>Interviewers</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.interviews.map(i => {
+              const a = state.applicants.find(x => x.id === i.applicantId);
+              const job = a ? state.jobs.find(j => j.id === a.jobId) : null;
+              return (
+                <tr key={i.id} className="border-b border-gray-100">
+                  <td className="py-3"><div className="font-medium navy">{a?.name}</div><div className="text-xs text-gray-500">{job?.title}</div></td>
+                  <td className="text-xs">{fmtTime(i.scheduledFor)}</td>
+                  <td className="text-xs">{i.type}</td>
+                  <td className="text-xs">{i.interviewers}</td>
+                  <td>
+                    {i.outcome === 'pending' ? (
+                      <div className="flex gap-1">
+                        <button onClick={() => setOutcome(i.id, 'pass')} className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200">Pass</button>
+                        <button onClick={() => setOutcome(i.id, 'fail')} className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">Fail</button>
+                      </div>
+                    ) : (
+                      <span className={`pill ${i.outcome === 'pass' ? 'pill-active' : 'pill-rejected'}`}>{i.outcome.toUpperCase()}</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card title="How interview scheduling works">
+        <ul className="text-sm space-y-1 text-gray-700">
+          <li>• Standard tier integrates with Google Calendar / Outlook to find mutual availability.</li>
+          <li>• Candidate gets an automated email with calendar invite + Zoom link (or address for in-person).</li>
+          <li>• Interviewers get a structured scorecard to fill out — drives the pass/fail decision and feeds the audit log.</li>
+          <li>• Outcome auto-advances the applicant in the pipeline (pass → Offered, fail → Rejected).</li>
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Offers =====
+function Offers({ state, setState }) {
+  const updateOffer = (id, status, extra = {}) => {
+    setState({ ...state, offers: state.offers.map(o => o.id === id ? { ...o, status, ...extra } : o) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Offers</div>
+        <h1 className="text-3xl font-bold navy">Offer letters</h1>
+      </div>
+
+      <Card title="All offers">
+        <table className="w-full text-sm">
+          <thead className="border-b border-gray-200">
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+              <th className="py-2">Candidate</th>
+              <th>Salary</th>
+              <th>Start</th>
+              <th>Sent</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.offers.map(o => {
+              const a = state.applicants.find(x => x.id === o.applicantId);
+              return (
+                <tr key={o.id} className="border-b border-gray-100">
+                  <td className="py-3"><div className="font-medium navy">{a?.name}</div><div className="text-xs text-gray-500">{o.notes}</div></td>
+                  <td className="text-xs">${o.salary}</td>
+                  <td className="text-xs">{fmt(o.startDate)}</td>
+                  <td className="text-xs text-gray-600">{fmt(o.sentDate)}</td>
+                  <td>
+                    <span className={`pill ${o.status === 'signed' ? 'pill-hired' : o.status === 'sent' ? 'pill-offered' : 'bg-gray-100 text-gray-600'}`}>{o.status.toUpperCase()}</span>
+                  </td>
+                  <td className="text-xs">
+                    {o.status === 'draft' && <button onClick={() => updateOffer(o.id, 'sent', { sentDate: new Date().toISOString().slice(0,10) })} className="text-blue-700 hover:underline">Send</button>}
+                    {o.status === 'sent' && <button onClick={() => updateOffer(o.id, 'signed')} className="text-green-700 hover:underline">Mark signed</button>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card title="What happens when an offer is signed">
+        <ol className="text-sm space-y-1 text-gray-700 list-decimal list-inside">
+          <li>Candidate's status auto-advances to "Hired".</li>
+          <li>An onboarding workflow is automatically created from the template assigned to their role.</li>
+          <li>An invite email is sent to the candidate with their HireFlow portal login.</li>
+          <li>If ShiftFlow integration is enabled, the new hire is auto-created in ShiftFlow with their certifications, contact info, and start-date scheduled shifts.</li>
+        </ol>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Onboarding =====
+function Onboarding({ state, setState }) {
+  const toggleTask = (obId, idx) => {
+    const updated = state.onboarding.map(ob => {
+      if (ob.id !== obId) return ob;
+      const tasks = ob.tasks.map((t, i) => i === idx ? { ...t, done: !t.done } : t);
+      const progress = Math.round(tasks.filter(t => t.done).length / tasks.length * 100);
+      return { ...ob, tasks, progress };
+    });
+    setState({ ...state, onboarding: updated });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Onboarding</div>
+        <h1 className="text-3xl font-bold navy">New hire setup</h1>
+      </div>
+
+      {state.onboarding.length === 0 && <Card><p className="text-sm text-gray-600">No active onboarding workflows. They'll appear here automatically when offers are signed.</p></Card>}
+
+      {state.onboarding.map(ob => {
+        const a = state.applicants.find(x => x.id === ob.applicantId);
+        const job = a ? state.jobs.find(j => j.id === a.jobId) : null;
+        return (
+          <Card key={ob.id} title={`${a?.name} — ${job?.title}`}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                <div className="bg-gold h-full transition-all" style={{ width: `${ob.progress}%` }} />
+              </div>
+              <div className="text-sm font-medium navy">{ob.progress}%</div>
+            </div>
+            <div className="text-xs text-gray-500 mb-3">Start date: {fmt(ob.startDate)}</div>
+            <div className="grid md:grid-cols-2 gap-1">
+              {ob.tasks.map((t, i) => (
+                <label key={i} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded">
+                  <input type="checkbox" checked={t.done} onChange={() => toggleTask(ob.id, i)} className="rounded" />
+                  <span className={`text-sm ${t.done ? 'line-through text-gray-400' : ''}`}>{t.name}</span>
+                </label>
+              ))}
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+// ===== First 90 Days =====
+function First90({ state }) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">First 90 Days</div>
+        <h1 className="text-3xl font-bold navy">Probationary tracking</h1>
+      </div>
+
+      <Card title="Active probationary periods">
+        <table className="w-full text-sm">
+          <thead className="border-b border-gray-200">
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+              <th className="py-2">Hire</th>
+              <th>Start date</th>
+              <th>Day</th>
+              <th>30-day check-in</th>
+              <th>60-day check-in</th>
+              <th>90-day decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-gray-100">
+              <td className="py-3"><div className="font-medium navy">Maria Santos</div><div className="text-xs text-gray-500">PSW — Day Shift</div></td>
+              <td className="text-xs">Jun 20, 2026</td>
+              <td className="text-xs font-medium">Day 1</td>
+              <td className="text-xs"><span className="pill bg-gray-100 text-gray-600">Scheduled Jul 20</span></td>
+              <td className="text-xs">—</td>
+              <td className="text-xs">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </Card>
+
+      <Card title="How the 90-day cycle works">
+        <ul className="text-sm space-y-1 text-gray-700">
+          <li>• Automatic milestone reminders at Day 30, Day 60, and Day 90.</li>
+          <li>• At each milestone, the supervisor completes a short scorecard (skills, attendance, fit).</li>
+          <li>• At Day 90, the supervisor makes a confirm / extend / part-ways decision.</li>
+          <li>• Decisions and scorecards become part of the employee's permanent audit log.</li>
+          <li>• If ShiftFlow is integrated, attendance and tardiness from ShiftFlow auto-populate the scorecard.</li>
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Settings =====
+function Settings({ state, setState }) {
+  const toggleSync = () => {
+    const enabled = !state.shiftFlowSync.enabled;
+    setState({
+      ...state,
+      shiftFlowSync: { ...state.shiftFlowSync, enabled, lastSync: enabled ? new Date().toISOString() : null }
+    });
+  };
+
+  const updateCompany = (field, value) => {
+    setState({ ...state, company: { ...state.company, [field]: value }});
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm uppercase tracking-widest text-amber-700 font-bold">Settings</div>
+        <h1 className="text-3xl font-bold navy">Configuration</h1>
+      </div>
+
+      <Card title="Organization">
+        <div className="grid md:grid-cols-2 gap-3">
+          <Input label="Company name" value={state.company.name}   onChange={v => updateCompany('name', v)} />
+          <Input label="Sector"       value={state.company.sector} onChange={v => updateCompany('sector', v)} />
+          <Input label="City"         value={state.company.city}   onChange={v => updateCompany('city', v)} />
+        </div>
+      </Card>
+
+      <Card title="ShiftFlow integration">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-sm text-gray-700 mb-2">Connect HireFlow to your ShiftFlow tenant. When a new hire is onboarded, they're automatically created in ShiftFlow with their certifications and start-date shifts.</p>
+            <p className="text-xs text-gray-500">Requires HireFlow Standard or Enterprise tier. Starter tier customers can add this integration for a one-time $1,500 enablement fee.</p>
+            {state.shiftFlowSync.enabled && (
+              <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded p-3">
+                <div className="text-xs uppercase tracking-wider text-indigo-700 font-bold mb-1">Connected</div>
+                <div className="text-sm">Tenant: <span className="font-mono">{state.shiftFlowSync.tenantSlug}</span></div>
+                <div className="text-xs text-gray-600 mt-1">Last sync: {state.shiftFlowSync.lastSync ? fmtTime(state.shiftFlowSync.lastSync) : 'never'}</div>
+              </div>
+            )}
+          </div>
+          <button onClick={toggleSync} className={`px-4 py-2 rounded-md text-sm font-medium ${state.shiftFlowSync.enabled ? 'bg-red-100 text-red-800 hover:bg-red-200' : 'bg-navy text-white hover:opacity-90'}`}>
+            {state.shiftFlowSync.enabled ? 'Disconnect' : 'Connect ShiftFlow'}
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Reset demo data">
+        <p className="text-sm text-gray-600 mb-2">Reset all data back to the seed demo state.</p>
+        <button onClick={() => { if (confirm('Reset all data?')) { localStorage.removeItem('hireflow_v1'); location.reload(); } }} className="bg-red-100 text-red-800 px-3 py-1.5 text-sm rounded hover:bg-red-200">Reset all data</button>
+      </Card>
+    </div>
+  );
+}
+
+// ===== Generic UI =====
+function Card({ title, children }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg">
+      {title && <div className="border-b border-gray-100 px-4 py-3"><h2 className="text-base font-semibold navy">{title}</h2></div>}
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
+function Input({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">{label}</label>
+      <input type="text" value={value} onChange={e => onChange(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200" />
+    </div>
+  );
+}
+
+// ===== App Shell =====
+function App() {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = localStorage.getItem('hireflow_v1');
+      if (raw) {
+        const stored = JSON.parse(raw);
+        // Merge stored on top of SEED so any missing keys get default values.
+        // This survives schema evolution — if a new tab/module expects a key
+        // that wasn't in the older stored state, SEED's default is used.
+        return {
+          ...SEED,
+          ...stored,
+          company: { ...SEED.company, ...(stored.company || {}) },
+          shiftFlowSync: { ...SEED.shiftFlowSync, ...(stored.shiftFlowSync || {}) },
+          jobs: Array.isArray(stored.jobs) ? stored.jobs : SEED.jobs,
+          applicants: Array.isArray(stored.applicants) ? stored.applicants : SEED.applicants,
+          interviews: Array.isArray(stored.interviews) ? stored.interviews : SEED.interviews,
+          offers: Array.isArray(stored.offers) ? stored.offers : SEED.offers,
+          onboarding: Array.isArray(stored.onboarding) ? stored.onboarding : SEED.onboarding,
+          hires: Array.isArray(stored.hires) ? stored.hires : SEED.hires,
+        };
+      }
+    } catch (e) {
+      console.warn('[HireFlow] stored state was invalid, resetting to seed:', e);
+    }
+    return SEED;
+  });
+  const [page, setPage] = useState('dashboard');
+
+  useEffect(() => {
+    try { localStorage.setItem('hireflow_v1', JSON.stringify(state)); } catch (e) {}
+  }, [state]);
+
+  const PAGES = [
+    { id: 'dashboard',   label: 'Dashboard'    },
+    { id: 'jobs',        label: 'Jobs'         },
+    { id: 'applicants',  label: 'Applicants'   },
+    { id: 'interviews',  label: 'Interviews'   },
+    { id: 'offers',      label: 'Offers'       },
+    { id: 'onboarding',  label: 'Onboarding'   },
+    { id: 'first90',     label: 'First 90 days'},
+    { id: 'settings',    label: 'Settings'     },
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-navy text-white">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Logo size={32} />
+            <div>
+              <div className="font-bold text-lg leading-tight">HireFlow<span className="gold">.</span></div>
+              <div className="text-xs text-gray-300 leading-tight">by Velogorithm</div>
+            </div>
+          </div>
+          <div className="flex-1" />
+          <div className="text-xs">
+            <span className="text-gray-400">Org: </span>
+            <span className="text-white">{state.company.name}</span>
+            {state.shiftFlowSync.enabled && <span className="ml-3 pill pill-synced">SHIFTFLOW SYNC ON</span>}
+          </div>
+        </div>
+        <nav className="border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto text-sm">
+            {PAGES.map(p => (
+              <button key={p.id} onClick={() => setPage(p.id)} className={`px-3 py-2.5 font-medium whitespace-nowrap ${page === p.id ? 'bg-white/10 text-white' : 'text-gray-300 hover:text-white'}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+      </header>
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+        {page === 'dashboard'   && <Dashboard state={state} />}
+        {page === 'jobs'        && <Jobs        state={state} setState={setState} />}
+        {page === 'applicants'  && <Applicants  state={state} setState={setState} />}
+        {page === 'interviews'  && <Interviews  state={state} setState={setState} />}
+        {page === 'offers'      && <Offers      state={state} setState={setState} />}
+        {page === 'onboarding'  && <Onboarding  state={state} setState={setState} />}
+        {page === 'first90'     && <First90     state={state} />}
+        {page === 'settings'    && <Settings    state={state} setState={setState} />}
+      </main>
+
+      <footer className="bg-gray-100 border-t border-gray-200 py-4 text-center text-xs text-gray-500">
+        <div className="max-w-7xl mx-auto px-4">
+          HireFlow &middot; A Velogorithm product &middot; Edmonton, Alberta &middot; velogorithm.com
+          {' '}&middot;{' '}
+          <span className="italic">Demo data stored in this browser only.</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

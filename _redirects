@@ -1,0 +1,8 @@
+# Pretty URLs for demo routes
+/manager      /hireflow-manager.html   200
+/newhire      /hireflow-newhire.html   200
+/demo         /hireflow-manager.html   200
+
+# Legacy filenames from old sessions redirect too
+/hireflow-app.html          /hireflow-manager.html   301
+/hireflow-onboarding.html   /hireflow-newhire.html   301

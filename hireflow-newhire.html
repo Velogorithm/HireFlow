@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HireFlow · Onboarding · Velogorithm</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --hc-primary: #6D28D9;
+    --hc-primary-dark: #5B21B6;
+    --hc-primary-light: #EDE9FE;
+    --hc-accent: #0F766E;
+    --hc-text: #0F172A;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; }
+  .btn-primary { background: var(--hc-primary); color: white; }
+  .btn-primary:hover { background: var(--hc-primary-dark); }
+  .tab-active { color: var(--hc-primary); border-bottom-color: var(--hc-primary); }
+  .progress-bar { background: var(--hc-primary-light); }
+  .progress-fill { background: var(--hc-primary); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo } = React;
+
+/* =========================
+   STORAGE & SEED
+========================= */
+const STORAGE_KEY = 'hireflow_v1';
+const SHARED_HANDOFF_KEY = 'velogorithm_platform_pending_imports';
+
+const newId = () => Math.random().toString(36).slice(2, 10);
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const fmtDate = (iso) => iso ? new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+const POLICIES = [
+  { id: 'conduct', title: 'Code of Conduct',
+    summary: 'Treat residents, families, and colleagues with dignity and respect. Harassment, discrimination, and abuse are not tolerated.',
+    fullText: `Every employee is expected to conduct themselves in a manner that upholds the dignity, safety, and well-being of residents, families, visitors, and colleagues at all times.
+
+This means treating every resident as a person first and a patient second; respecting the cultural, religious, gender, and personal identities of everyone in our care; refraining from any language, gesture, or action that could reasonably be perceived as harassing, discriminatory, demeaning, or abusive; maintaining appropriate professional boundaries at all times; and reporting any observed violation of this Code immediately to your supervisor or the confidential safeguarding line.
+
+Breaches of the Code of Conduct are grounds for progressive discipline up to and including termination of employment. Serious breaches may result in immediate dismissal and may be reported to regulatory authorities and, where warranted, to law enforcement.
+
+Acknowledgement of this policy affirms that you have read and understood these expectations and agree to abide by them for the duration of your employment.` },
+
+  { id: 'confidentiality', title: 'Resident Confidentiality (PIPEDA / PHIPA)',
+    summary: 'Resident information is strictly confidential. Do not share details or records on personal devices or social media.',
+    fullText: `All information about residents including names, health status, family circumstances, care plans, financial information, and photographs is protected personal health information under Alberta Health Information Act (HIA), and where applicable Ontario PHIPA and federal PIPEDA legislation.
+
+Employees may access resident information ONLY on a need-to-know basis for the purpose of providing care or fulfilling assigned duties. Do not discuss residents with anyone outside the care team; do not take photos or videos of residents on any device; do not post about residents on social media in any form; do not share access credentials; do not access records for residents not under your care; and do not remove records or copies of records from the premises.
+
+Suspected privacy breaches must be reported to the Privacy Officer within 24 hours. Deliberate breaches will result in disciplinary action up to and including termination, and may be reported to the Office of the Information and Privacy Commissioner.
+
+Your acknowledgement confirms your commitment to protecting resident privacy for the duration of your employment and thereafter.` },
+
+  { id: 'safety', title: 'Workplace Safety',
+    summary: 'Report hazards immediately. Use proper manual handling technique. Wear non-slip footwear and PPE as required.',
+    fullText: `Workplace safety is a shared responsibility between the employer and every employee under the Alberta Occupational Health and Safety Act.
+
+Your responsibilities include attending all mandatory safety training and following safe work procedures at all times; using personal protective equipment as required for the task; following proper manual handling and resident transfer techniques taught in orientation; never lifting a resident alone if a two-person lift is indicated; reporting any hazard, near-miss, or unsafe condition to your supervisor before continuing work; and refusing work you reasonably believe to be dangerous.
+
+The employer will provide required PPE and training; maintain a safe physical environment; investigate every reported hazard; and support the health and safety committee.
+
+Injuries at work must be reported to your supervisor immediately and to Human Resources within 24 hours to enable timely Workers Compensation Board documentation.` },
+
+  { id: 'harassment', title: 'Anti-Harassment and Discrimination',
+    summary: 'Zero-tolerance policy. Report concerns to your supervisor or via the confidential safeguarding line.',
+    fullText: `This organization is committed to a workplace free of harassment and discrimination in all its forms, in accordance with the Alberta Human Rights Act and the Canadian Human Rights Act.
+
+Harassment is defined as any unwelcome conduct that a reasonable person would find intimidating, hostile, or offensive, including conduct based on race, national or ethnic origin, colour, religion, age, sex, sexual orientation, gender identity or expression, marital status, family status, disability, or a conviction for which a pardon has been granted.
+
+Zero tolerance applies to verbal harassment such as slurs and jokes; physical harassment such as unwanted touching; visual harassment such as posters or images; sexual harassment such as advances or propositions; and reprisal against anyone who reports harassment in good faith.
+
+Every complaint will be investigated promptly and confidentially. Retaliation against complainants or witnesses is itself a disciplinable offence. Complaints may be made to your direct supervisor, the HR Director, or the confidential safeguarding line. Anonymous reports are accepted and investigated to the extent possible.` },
+
+  { id: 'attendance', title: 'Attendance and Punctuality',
+    summary: 'Notify your supervisor before the start of your shift if you cannot attend. Sick leave requires notification per HR policy.',
+    fullText: `Consistent attendance is essential to safe resident care and fair distribution of work among your colleagues.
+
+Expectations: arrive at your scheduled work location ready to begin your shift at the scheduled start time; notify your supervisor by phone at least two hours before your shift if you cannot attend; provide a physician note for any sick leave of three consecutive days or more; give at least two weeks notice for planned time off, submitted through the HR system; and complete required documentation for any bereavement, family responsibility, or personal emergency leave.
+
+Unscheduled absences of more than two occurrences in a rolling ninety-day period will trigger a supportive conversation with your supervisor. Patterns of unexcused absence or repeated late arrivals may lead to progressive discipline.
+
+If you are experiencing personal circumstances affecting your attendance, please speak with HR. Accommodations and Employee Assistance Program support are available.` },
+
+  { id: 'social', title: 'Social Media Policy',
+    summary: 'Do not post about residents, colleagues, or workplace events. Personal social media must not identify the employer in posts about work.',
+    fullText: `This policy applies to all social media use including Facebook, Instagram, TikTok, LinkedIn, X, YouTube, private messaging apps, and any other public or semi-public platform.
+
+You must not post photos, videos, or written content that identifies or is likely to identify a resident, family member, or colleague; discuss workplace incidents, disputes, or internal matters publicly; use the employer name, logo, or branding on personal accounts in a way that suggests you speak on behalf of the organization; post disparaging content about residents, colleagues, or the employer; or share confidential information of any kind.
+
+You may maintain personal social media accounts on your own time; discuss general topics relating to your profession without referring to specific workplace events or people; and use LinkedIn to represent your professional history factually.
+
+Breaches, particularly those that reveal or could reveal resident identity, are treated as privacy violations under the Confidentiality Policy and are grounds for discipline up to and including immediate termination.` },
+
+  { id: 'firstaid', title: 'First Aid Responsibilities',
+    summary: 'Hold valid CPR and First Aid certification. Follow institution-specific care protocols for residents with disabilities.',
+    fullText: `Every direct-care employee must hold a valid CPR Level C and Standard First Aid certification for the full duration of their employment. Certifications must be renewed before expiry; the organization will reimburse the cost of renewal for active employees.
+
+In an emergency: assess the scene for safety; check the resident responsiveness and breathing; call for help using the emergency call system; begin CPR or first aid within the scope of your training; do not move a resident unless remaining in place would cause further harm; document your actions in the resident chart immediately after the incident is resolved.
+
+Care of residents with disabilities requires additional considerations. Consult the resident care plan for specific accommodations, mobility limitations, communication needs, dietary restrictions, and behavioural triggers. When in doubt, ask the shift lead and never guess.
+
+Refresher training is offered quarterly. Attendance is mandatory for all direct-care staff.` },
+
+  { id: 'incident', title: 'Incident Reporting Protocol',
+    summary: 'Any accident, fall, medication error, or near-miss must be logged in an incident report within the same shift.',
+    fullText: `Every incident and near-miss must be documented within the shift in which it occurred, without exception. Delayed reporting undermines resident safety, complicates investigations, and can jeopardize regulatory compliance.
+
+Reportable incidents include resident falls whether or not injury results; medication errors including wrong dose, wrong resident, wrong time, or missed dose; behavioural incidents including aggression, wandering, or resident altercation; staff or visitor injuries; property damage or theft; equipment malfunctions; any breach of safeguarding, privacy, or safety policies; and near-misses that could have resulted in any of the above.
+
+To report: complete the incident report form on paper or electronically with factual, objective information; notify your supervisor verbally within the same shift; do not alter the resident chart until you have discussed the report with your supervisor; do not discuss the incident with anyone outside the care and management team; and participate cooperatively in any subsequent investigation.
+
+Incident reports are used to improve care and never for punitive discipline of good-faith reports. Failure to report, however, is itself a serious breach of duty.` },
+];
+
+const TRAINING = [
+  { id: 'cpr', title: 'CPR Level C', duration: '8 hours', required: true, mandatory: 'Before first shift' },
+  { id: 'firstaid', title: 'Standard First Aid', duration: '16 hours', required: true, mandatory: 'Within 30 days' },
+  { id: 'manual', title: 'Manual Handling', duration: '4 hours', required: true, mandatory: 'Before first shift' },
+  { id: 'pipeda', title: 'PIPEDA / Privacy Training', duration: '2 hours', required: true, mandatory: 'Before first shift' },
+  { id: 'dementia', title: 'Dementia Care Basics', duration: '6 hours', required: false, mandatory: 'Recommended within 60 days' },
+  { id: 'medication', title: 'Medication Administration', duration: '12 hours', required: false, mandatory: 'Required if administering meds' },
+];
+
+const EQUIPMENT = [
+  { id: 'scrubs', label: 'Uniform scrubs (2 sets)' },
+  { id: 'badge', label: 'Photo ID badge' },
+  { id: 'shoes', label: 'Non-slip footwear (provided by employee)' },
+  { id: 'name', label: 'Name tag' },
+  { id: 'lock', label: 'Locker key' },
+  { id: 'manual', label: 'Employee handbook' },
+  { id: 'tablet', label: 'Mobile device (for ShiftFlow access)' },
+];
+
+const ORIENTATION = [
+  { id: 'tour', label: 'Site tour with supervisor' },
+  { id: 'team', label: 'Meet your immediate team' },
+  { id: 'shiftflow', label: 'ShiftFlow sign-in & walkthrough' },
+  { id: 'shadow1', label: 'Shadow shift 1 (with senior caregiver)' },
+  { id: 'shadow2', label: 'Shadow shift 2 (different shift type)' },
+  { id: 'meeting', label: 'End-of-week-1 check-in with manager' },
+];
+
+const SECTIONS = [
+  { id: 'personal',    label: 'Personal info',          step: '01' },
+  { id: 'banking',     label: 'Banking & tax',          step: '02' },
+  { id: 'emergency',   label: 'Emergency contact',      step: '03' },
+  { id: 'documents',   label: 'Documents & credentials',step: '04' },
+  { id: 'policies',    label: 'Policy acknowledgments', step: '05' },
+  { id: 'training',    label: 'Training enrollment',    step: '06' },
+  { id: 'equipment',   label: 'Equipment & uniform',    step: '07' },
+  { id: 'orientation', label: 'Orientation checklist',  step: '08' },
+];
+
+const emptySections = () => Object.fromEntries(SECTIONS.map(s => [s.id, { complete: false, data: {} }]));
+const emptyReviews = () => Object.fromEntries(SECTIONS.map(s => [s.id, null]));
+
+const seedData = () => {
+  const users = [
+    { id: 'u1', username: 'hr', password: 'hr', name: 'Pat O\'Connor', role: 'hr', email: 'pat.oconnor@democare.org' },
+    { id: 'u2', username: 'manager', password: 'manager', name: 'Devi Patel', role: 'manager', email: 'devi.patel@democare.org' },
+    { id: 'u3', username: 'sarah', password: 'sarah', name: 'Sarah Williams', role: 'hire', email: 'sarah.w@example.com' },
+    { id: 'u4', username: 'david', password: 'david', name: 'David Chen', role: 'hire', email: 'david.chen@example.com' },
+    { id: 'u5', username: 'maria', password: 'maria', name: 'Maria Santos', role: 'hire', email: 'maria.s@example.com' },
+  ];
+
+  const today = new Date();
+  const inOneWeek = new Date(today); inOneWeek.setDate(today.getDate() + 7);
+  const inTwoWeeks = new Date(today); inTwoWeeks.setDate(today.getDate() + 14);
+  const inAMonth = new Date(today); inAMonth.setDate(today.getDate() + 30);
+
+  // Sarah — Not started (just created)
+  const sarah = {
+    id: 'h1', userId: 'u3', fullName: 'Sarah Williams', email: 'sarah.w@example.com', phone: '555-0234',
+    startDate: inOneWeek.toISOString().slice(0, 10),
+    position: 'Personal Support Worker',
+    location: 'Wing A',
+    managerId: 'u2',
+    status: 'not-started',
+    sections: emptySections(),
+    reviews: emptyReviews(),
+    pushedToShiftFlow: null,
+    createdAt: today.toISOString(),
+    createdBy: 'hr',
+  };
+
+  // David — In progress (some sections done)
+  const david = {
+    id: 'h2', userId: 'u4', fullName: 'David Chen', email: 'david.chen@example.com', phone: '555-0345',
+    startDate: inTwoWeeks.toISOString().slice(0, 10),
+    position: 'Personal Support Worker',
+    location: 'Wing B',
+    managerId: 'u2',
+    status: 'in-progress',
+    sections: {
+      ...emptySections(),
+      personal:  { complete: true,  data: { address: '123 King St W, Toronto', dob: '1992-08-14', sin: '•••-•••-456', citizenship: 'Canadian' } },
+      banking:   { complete: true,  data: { bank: 'RBC', transit: '00012', account: '••••3456', td1Federal: 'basic', td1Provincial: 'basic' } },
+      emergency: { complete: true,  data: { name: 'Lin Chen', relationship: 'Spouse', phone: '555-0346' } },
+      documents: { complete: false, data: { sin_doc: false, license: false, certs: false, photo_id: false } },
+      policies:  { complete: false, data: Object.fromEntries(POLICIES.map(p => [p.id, false])) },
+    },
+    reviews: emptyReviews(),
+    pushedToShiftFlow: null,
+    createdAt: today.toISOString(),
+    createdBy: 'hr',
+  };
+
+  // Maria — In review (all sections submitted, HR reviewing)
+  const maria = {
+    id: 'h3', userId: 'u5', fullName: 'Maria Santos', email: 'maria.s@example.com', phone: '555-0456',
+    startDate: inAMonth.toISOString().slice(0, 10),
+    position: 'Registered Nurse',
+    location: 'Wing C',
+    managerId: 'u2',
+    status: 'in-review',
+    sections: {
+      personal:  { complete: true, data: { address: '88 Bloor St E, Toronto', dob: '1988-03-22', sin: '•••-•••-789', citizenship: 'Permanent Resident' } },
+      banking:   { complete: true, data: { bank: 'TD', transit: '00455', account: '••••7890', td1Federal: 'basic', td1Provincial: 'basic' } },
+      emergency: { complete: true, data: { name: 'Jose Santos', relationship: 'Brother', phone: '555-0457' } },
+      documents: { complete: true, data: { sin_doc: true, license: true, certs: true, photo_id: true } },
+      policies:  { complete: true, data: Object.fromEntries(POLICIES.map(p => [p.id, true])) },
+      training:  { complete: true, data: Object.fromEntries(TRAINING.filter(t => t.required).map(t => [t.id, todayISO()])) },
+      equipment: { complete: true, data: Object.fromEntries(EQUIPMENT.map(e => [e.id, true])) },
+      orientation: { complete: true, data: Object.fromEntries(ORIENTATION.map(o => [o.id, false])) },
+    },
+    reviews: {
+      ...emptyReviews(),
+      personal: { approved: true, by: 'hr', at: new Date().toISOString(), notes: 'Verified.' },
+      banking:  { approved: true, by: 'hr', at: new Date().toISOString(), notes: '' },
+    },
+    pushedToShiftFlow: null,
+    createdAt: today.toISOString(),
+    createdBy: 'hr',
+  };
+
+  return {
+    companyName: 'Demo Care Services',
+    users, hires: [sarah, david, maria],
+    auditLog: [
+      { ts: new Date().toISOString(), by: 'hr', action: `Created hire: Sarah Williams (Personal Support Worker)` },
+      { ts: new Date().toISOString(), by: 'hr', action: `Created hire: David Chen (Personal Support Worker)` },
+      { ts: new Date().toISOString(), by: 'hr', action: `Created hire: Maria Santos (Registered Nurse)` },
+    ],
+  };
+};
+
+const loadState = () => {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
+  const seeded = seedData();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+  return seeded;
+};
+const saveState = (s) => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {} };
+
+/* =========================
+   PRIMITIVES
+========================= */
+const Badge = ({ tone='gray', children }) => {
+  const tones = {
+    gray: 'bg-gray-100 text-gray-700',
+    violet: 'bg-violet-100 text-violet-800',
+    teal: 'bg-teal-100 text-teal-800',
+    amber: 'bg-amber-100 text-amber-900',
+    red: 'bg-red-100 text-red-800',
+    yellow: 'bg-yellow-100 text-yellow-900',
+    green: 'bg-green-100 text-green-800',
+    blue: 'bg-blue-100 text-blue-900',
+  };
+  return <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${tones[tone]}`}>{children}</span>;
+};
+
+const StatusBadge = ({ status }) => {
+  const map = {
+    'not-started': { tone: 'gray', label: 'Not started' },
+    'in-progress': { tone: 'blue', label: 'In progress' },
+    'in-review':   { tone: 'amber', label: 'In review' },
+    'completed':   { tone: 'green', label: 'Completed' },
+  };
+  const cfg = map[status] || map['not-started'];
+  return <Badge tone={cfg.tone}>{cfg.label}</Badge>;
+};
+
+const Card = ({ title, action, children, className='' }) => (
+  <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${className}`}>
+    {(title || action) && (
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        {title && <h3 className="font-semibold text-gray-800">{title}</h3>}
+        {action}
+      </div>
+    )}
+    <div className="p-5">{children}</div>
+  </div>
+);
+
+const StatCard = ({ label, value, tone='violet' }) => {
+  const tones = {
+    violet: 'from-violet-50 to-white text-violet-800',
+    green: 'from-green-50 to-white text-green-800',
+    amber: 'from-amber-50 to-white text-amber-900',
+    blue: 'from-blue-50 to-white text-blue-800',
+    gray: 'from-gray-50 to-white text-gray-700',
+  };
+  return (
+    <div className={`rounded-xl border border-gray-200 bg-gradient-to-br ${tones[tone]} p-4`}>
+      <div className="text-xs text-gray-500 uppercase tracking-wider">{label}</div>
+      <div className="text-2xl font-bold mt-1">{value}</div>
+    </div>
+  );
+};
+
+const Modal = ({ open, onClose, title, children, footer, wide=false }) => {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
+      <div className={`bg-white rounded-xl shadow-xl w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} max-h-[90vh] overflow-auto`} onClick={e => e.stopPropagation()}>
+        <div className="px-5 py-3 border-b flex items-center justify-between">
+          <h3 className="font-semibold">{title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
+        </div>
+        <div className="p-5">{children}</div>
+        {footer && <div className="px-5 py-3 border-t bg-gray-50 rounded-b-xl flex gap-2 justify-end">{footer}</div>}
+      </div>
+    </div>
+  );
+};
+
+const Field = ({ label, children }) => (
+  <label className="block">
+    <span className="text-sm text-gray-600">{label}</span>
+    <div className="mt-1">{children}</div>
+  </label>
+);
+
+const computeProgress = (hire) => {
+  if (!hire) return 0;
+  const total = SECTIONS.length;
+  const done = SECTIONS.filter(s => hire.sections[s.id]?.complete).length;
+  return Math.round((done / total) * 100);
+};
+
+const computeStatus = (hire) => {
+  const allComplete = SECTIONS.every(s => hire.sections[s.id]?.complete);
+  const anyComplete = SECTIONS.some(s => hire.sections[s.id]?.complete);
+  const allReviewed = SECTIONS.every(s => hire.reviews[s.id]?.approved);
+  if (hire.pushedToShiftFlow) return 'completed';
+  if (allComplete && allReviewed) return 'completed';
+  if (allComplete) return 'in-review';
+  if (anyComplete) return 'in-progress';
+  return 'not-started';
+};
+
+/* =========================
+   LOGIN
+========================= */
+const Login = ({ onLogin, users }) => {
+  const [username, setUsername] = useState('hr');
+  const [password, setPassword] = useState('hr');
+  const [err, setErr] = useState('');
+  const submit = (e) => {
+    e.preventDefault();
+    const u = users.find(x => x.username === username.trim() && x.password === password);
+    if (!u) { setErr('Invalid credentials'); return; }
+    onLogin(u);
+  };
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-50 via-white to-teal-50">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-violet-700 text-white text-2xl font-bold mb-3 shadow">HC</div>
+          <h1 className="text-2xl font-bold text-gray-800">HireFlow</h1>
+          <p className="text-gray-500 text-sm">Onboarding for care institutions</p>
+          <p className="text-gray-400 text-[10px] mt-1">by Velogorithm</p>
+        </div>
+        <form onSubmit={submit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+          <div>
+            <label className="text-sm text-gray-600">Username</label>
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          {err && <div className="text-sm text-red-600">{err}</div>}
+          <button className="w-full btn-primary font-medium rounded-lg py-2.5">Sign in</button>
+          <div className="text-xs text-gray-500 leading-relaxed pt-2 border-t">
+            <p className="font-semibold text-gray-700 mb-1">Demo accounts</p>
+            <p>HR: <span className="font-mono">hr / hr</span> · Manager: <span className="font-mono">manager / manager</span></p>
+            <p>New hires: <span className="font-mono">sarah / sarah</span> (just started), <span className="font-mono">david / david</span> (in progress), <span className="font-mono">maria / maria</span> (in review)</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/* =========================
+   HR — PIPELINE DASHBOARD
+========================= */
+const HRDashboard = ({ state, setState, onOpen, onAdd }) => {
+  const counts = {
+    notStarted: state.hires.filter(h => computeStatus(h) === 'not-started').length,
+    inProgress: state.hires.filter(h => computeStatus(h) === 'in-progress').length,
+    inReview:   state.hires.filter(h => computeStatus(h) === 'in-review').length,
+    completed:  state.hires.filter(h => computeStatus(h) === 'completed').length,
+  };
+  const upcomingStarts = state.hires
+    .filter(h => h.startDate >= todayISO())
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+    .slice(0, 5);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard label="Not started" value={counts.notStarted} tone="gray" />
+        <StatCard label="In progress" value={counts.inProgress} tone="blue" />
+        <StatCard label="In review" value={counts.inReview} tone="amber" />
+        <StatCard label="Completed" value={counts.completed} tone="green" />
+      </div>
+
+      <Card title="All hires" action={
+        <button onClick={onAdd} className="btn-primary rounded-lg px-3 py-1.5 text-sm font-medium">+ Add new hire</button>
+      }>
+        {state.hires.length === 0 ? (
+          <p className="text-sm text-gray-500">No hires yet. Click "Add new hire" to start onboarding someone.</p>
+        ) : (
+          <div className="overflow-x-auto -mx-5">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-700">
+                <tr>
+                  <th className="text-left px-4 py-2">Name</th>
+                  <th className="text-left px-4 py-2">Position</th>
+                  <th className="text-left px-4 py-2">Location</th>
+                  <th className="text-left px-4 py-2">Start date</th>
+                  <th className="text-left px-4 py-2">Progress</th>
+                  <th className="text-left px-4 py-2">Status</th>
+                  <th className="text-right px-4 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.hires.map(h => {
+                  const progress = computeProgress(h);
+                  return (
+                    <tr key={h.id} className="border-t border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => onOpen(h.id)}>
+                      <td className="px-4 py-2 font-medium">{h.fullName}</td>
+                      <td className="px-4 py-2">{h.position}</td>
+                      <td className="px-4 py-2">{h.location}</td>
+                      <td className="px-4 py-2">{fmtDate(h.startDate)}</td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="progress-bar h-1.5 w-24 rounded-full overflow-hidden">
+                            <div className="progress-fill h-full" style={{width: progress + '%'}} />
+                          </div>
+                          <span className="text-xs text-gray-500">{progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2"><StatusBadge status={computeStatus(h)} /></td>
+                      <td className="px-4 py-2 text-right">
+                        <button className="text-violet-700 hover:underline text-sm">Open</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      <Card title="Upcoming starts (next 30 days)">
+        {upcomingStarts.length === 0 ? (
+          <p className="text-sm text-gray-500">No upcoming starts.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {upcomingStarts.map(h => (
+              <li key={h.id} className="py-3 flex justify-between items-center">
+                <div>
+                  <div className="font-medium">{h.fullName}</div>
+                  <div className="text-xs text-gray-500">{h.position} · {h.location}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium">{fmtDate(h.startDate)}</div>
+                  <StatusBadge status={computeStatus(h)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+/* =========================
+   ADD NEW HIRE MODAL
+========================= */
+const AddHireModal = ({ open, onClose, onSave, managers }) => {
+  const blank = { fullName: '', email: '', phone: '', startDate: '', position: '', location: '', managerId: managers[0]?.id || '' };
+  const [d, setD] = useState(blank);
+  useEffect(() => { if (open) setD(blank); }, [open]);
+
+  const submit = () => {
+    if (!d.fullName || !d.email || !d.startDate) { alert('Full name, email, and start date are required.'); return; }
+    onSave(d);
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Add new hire" wide
+      footer={<>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm rounded-lg border">Cancel</button>
+        <button onClick={submit} className="px-3 py-1.5 text-sm rounded-lg btn-primary">Create &amp; send invite</button>
+      </>}>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Full name *"><input value={d.fullName} onChange={e => setD({...d, fullName: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Email *"><input type="email" value={d.email} onChange={e => setD({...d, email: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Phone"><input value={d.phone} onChange={e => setD({...d, phone: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Start date *"><input type="date" value={d.startDate} onChange={e => setD({...d, startDate: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Position"><input value={d.position} onChange={e => setD({...d, position: e.target.value})} placeholder="e.g. Personal Support Worker" className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Location / wing"><input value={d.location} onChange={e => setD({...d, location: e.target.value})} placeholder="e.g. Wing A" className="w-full border rounded-lg px-3 py-2" /></Field>
+        <Field label="Manager">
+          <select value={d.managerId} onChange={e => setD({...d, managerId: e.target.value})} className="w-full border rounded-lg px-3 py-2">
+            {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </Field>
+      </div>
+      <p className="text-xs text-gray-500 mt-3">The new hire will be invited by email to complete their onboarding via the HireFlow self-service portal.</p>
+    </Modal>
+  );
+};
+
+/* =========================
+   SECTION FORMS (8 onboarding steps)
+========================= */
+const SectionPersonal = ({ data, onChange }) => (
+  <div className="grid sm:grid-cols-2 gap-3">
+    <Field label="Home address"><input value={data.address || ''} onChange={e => onChange({...data, address: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+    <Field label="Date of birth"><input type="date" value={data.dob || ''} onChange={e => onChange({...data, dob: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+    <Field label="SIN (last 3 digits)"><input placeholder="•••-•••-123" value={data.sin || ''} onChange={e => onChange({...data, sin: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" /></Field>
+    <Field label="Citizenship status">
+      <select value={data.citizenship || ''} onChange={e => onChange({...data, citizenship: e.target.value})} className="w-full border rounded-lg px-3 py-2">
+        <option value="">Select…</option>
+        <option>Canadian</option><option>Permanent Resident</option><option>Work Permit</option>
+      </select>
+    </Field>
+  </div>
+);
+
+const SectionBanking = ({ data, onChange }) => (
+  <div className="space-y-3">
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+      Banking and tax information is encrypted at rest and visible only to authorized HR staff. SIN and account numbers are masked after submission.
+    </div>
+    <div className="grid sm:grid-cols-3 gap-3">
+      <Field label="Bank"><input value={data.bank || ''} onChange={e => onChange({...data, bank: e.target.value})} placeholder="e.g. RBC" className="w-full border rounded-lg px-3 py-2" /></Field>
+      <Field label="Transit"><input value={data.transit || ''} onChange={e => onChange({...data, transit: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" /></Field>
+      <Field label="Account #"><input value={data.account || ''} onChange={e => onChange({...data, account: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" /></Field>
+    </div>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <Field label="TD1 Federal claim">
+        <select value={data.td1Federal || ''} onChange={e => onChange({...data, td1Federal: e.target.value})} className="w-full border rounded-lg px-3 py-2">
+          <option value="">Select…</option><option value="basic">Basic personal amount</option><option value="more">More than basic (form required)</option>
+        </select>
+      </Field>
+      <Field label="TD1 Provincial claim">
+        <select value={data.td1Provincial || ''} onChange={e => onChange({...data, td1Provincial: e.target.value})} className="w-full border rounded-lg px-3 py-2">
+          <option value="">Select…</option><option value="basic">Basic personal amount</option><option value="more">More than basic (form required)</option>
+        </select>
+      </Field>
+    </div>
+  </div>
+);
+
+const SectionEmergency = ({ data, onChange }) => (
+  <div className="grid sm:grid-cols-3 gap-3">
+    <Field label="Contact name"><input value={data.name || ''} onChange={e => onChange({...data, name: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+    <Field label="Relationship"><input value={data.relationship || ''} onChange={e => onChange({...data, relationship: e.target.value})} placeholder="e.g. Spouse" className="w-full border rounded-lg px-3 py-2" /></Field>
+    <Field label="Phone"><input value={data.phone || ''} onChange={e => onChange({...data, phone: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></Field>
+  </div>
+);
+
+const SectionDocuments = ({ data, onChange }) => {
+  const STORAGE_MODES = {
+    starter: {
+      label: 'Starter — Email to HR',
+      short: 'File emailed to hr@customer.com. Not stored by Velogorithm.',
+      icon: '✉',
+      badgeCls: 'bg-blue-100 text-blue-800',
+    },
+    standard: {
+      label: 'Standard — Cloudflare R2',
+      short: 'File stored in Cloudflare R2, WNAM region. AES-256 at rest. 7-year retention.',
+      icon: '☁',
+      badgeCls: 'bg-teal-100 text-teal-800',
+    },
+    enterprise: {
+      label: 'Enterprise — Customer bucket',
+      short: 'File uploaded to customer AWS S3 / Azure Blob / SharePoint. Velogorithm keeps only metadata.',
+      icon: '⚿',
+      badgeCls: 'bg-violet-100 text-violet-800',
+    },
+  };
+
+  const [mode, setMode] = React.useState(() => {
+    try { return localStorage.getItem('hireflow_storage_mode') || 'standard'; }
+    catch(e) { return 'standard'; }
+  });
+  const changeMode = (m) => {
+    setMode(m);
+    try { localStorage.setItem('hireflow_storage_mode', m); } catch(e) {}
+  };
+  const current = STORAGE_MODES[mode];
+
+  const docs = [
+    { id: 'sin_doc', label: 'SIN documentation', accept: 'image/*,.pdf' },
+    { id: 'license', label: 'Driver\'s license or government ID', accept: 'image/*,.pdf' },
+    { id: 'certs', label: 'Professional certifications (CPR, First Aid, etc.)', accept: 'image/*,.pdf' },
+    { id: 'photo_id', label: 'Recent photo for ID badge', accept: 'image/*' },
+  ];
+
+  const MAX_MB = 5;
+  const [error, setError] = React.useState('');
+
+  const formatSize = (b) => {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(2) + ' MB';
+  };
+
+  const handleFile = (docId, file) => {
+    setError('');
+    if (!file) return;
+    if (file.size > MAX_MB * 1048576) {
+      setError('File larger than ' + MAX_MB + ' MB — demo storage limit. In production, HireFlow Standard supports up to 100 MB per file.');
+      return;
+    }
+    const meta = {
+      filename: file.name,
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+      uploadedAt: new Date().toISOString(),
+    };
+    // For image files under 1 MB, capture a preview
+    if (file.type && file.type.startsWith('image/') && file.size < 1048576) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        onChange({...data, [docId]: {...meta, preview: ev.target.result}});
+      };
+      reader.readAsDataURL(file);
+    } else {
+      onChange({...data, [docId]: meta});
+    }
+  };
+
+  const removeDoc = (docId) => {
+    const next = {...data};
+    delete next[docId];
+    onChange(next);
+  };
+
+  // Trigger click on a hidden file input by id
+  const triggerPicker = (docId) => {
+    const el = document.getElementById('hf_file_' + docId);
+    if (el) el.click();
+  };
+
+  // Backwards-compat: previous format stored `true` for uploaded. Normalise on read.
+  const getMeta = (docId) => {
+    const v = data[docId];
+    if (!v) return null;
+    if (v === true) return { filename: '(uploaded)', size: 0, type: '', uploadedAt: null };
+    return v;
+  };
+
+  return (
+    <div>
+      {/* Info box */}
+      <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="text-xs font-bold text-amber-900 mb-1 tracking-wide uppercase">Where do these files actually go?</div>
+        <p className="text-xs text-gray-800 leading-relaxed">
+          In production, the storage destination depends on your tier: <strong>Starter</strong> emails files directly to your HR inbox (Velogorithm never stores them). <strong>Standard</strong> stores encrypted in Cloudflare R2 within your isolated tenant, retrievable via the HireFlow web UI with a full audit trail. <strong>Enterprise</strong> pushes to your own cloud storage (AWS S3, Azure Blob, or SharePoint), with Velogorithm keeping only metadata. Use the toggle below to see what each mode looks like.
+        </p>
+      </div>
+
+      {/* Storage mode toggle */}
+      <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="text-xs font-bold text-gray-700 mb-2 tracking-wide uppercase">Demo control &middot; Storage mode</div>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {Object.keys(STORAGE_MODES).map(k => (
+            <button key={k} onClick={() => changeMode(k)} type="button"
+              className={`text-xs px-3 py-1.5 rounded-full font-medium border ${mode === k ? 'bg-violet-700 text-white border-violet-700' : 'bg-white text-gray-700 border-gray-300 hover:border-violet-300'}`}>
+              {STORAGE_MODES[k].label}
+            </button>
+          ))}
+        </div>
+        <div className={`text-xs px-2 py-1 rounded ${current.badgeCls} inline-block`}>
+          {current.icon} {current.short}
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-600 mb-3">Upload each required document. Click <strong>Upload</strong> to open your file browser and pick a real file. In this demo, the file is not sent to a server &mdash; but the filename, size, and (for images) a preview are stored locally so you can see the workflow.</p>
+
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+          {error}
+        </div>
+      )}
+
+      <ul className="space-y-2">
+        {docs.map(d => {
+          const meta = getMeta(d.id);
+          return (
+            <li key={d.id} className="p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <span className={`w-8 h-8 rounded-full grid place-items-center flex-shrink-0 mt-0.5 ${meta ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                    {meta ? '✓' : '○'}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium">{d.label}</div>
+                    {meta && (
+                      <div className="mt-1">
+                        <div className="text-xs text-gray-700 truncate">
+                          <span className="font-mono">{meta.filename}</span>
+                          {meta.size ? <span className="text-gray-500"> &middot; {formatSize(meta.size)}</span> : null}
+                          {meta.type ? <span className="text-gray-500"> &middot; {meta.type}</span> : null}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {current.icon} {current.short}
+                        </div>
+                        {meta.preview && (
+                          <img src={meta.preview} alt="preview" className="mt-2 rounded border border-gray-200 max-h-24 max-w-full" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <input
+                    id={'hf_file_' + d.id}
+                    type="file"
+                    accept={d.accept}
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFile(d.id, e.target.files && e.target.files[0])}
+                  />
+                  {meta ? (
+                    <div className="flex gap-1">
+                      <button onClick={() => triggerPicker(d.id)} className="text-xs px-2 py-1.5 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">Replace</button>
+                      <button onClick={() => removeDoc(d.id)} className="text-xs px-2 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Remove</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => triggerPicker(d.id)} className="text-xs px-3 py-1.5 rounded-lg btn-primary">
+                      Upload
+                    </button>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p className="text-xs text-gray-500 italic mt-3">Demo storage limit: {MAX_MB} MB per file. In production, HireFlow Standard supports up to 100 MB per file; Enterprise negotiable per contract.</p>
+    </div>
+  );
+};
+
+const SectionPolicies = ({ data, onChange }) => {
+  const [expanded, setExpanded] = React.useState({});
+  const toggle = (id) => setExpanded(e => Object.assign({}, e, { [id]: !e[id] }));
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-gray-600 mb-3">Please read each policy carefully and acknowledge by clicking the checkbox. Your acknowledgments are recorded with a timestamp.</p>
+      {POLICIES.map(p => {
+        const isOpen = !!expanded[p.id];
+        const acked = !!data[p.id];
+        return (
+          <div key={p.id} className="border border-gray-200 rounded-lg p-3">
+            <div className="font-medium text-sm">{p.title}</div>
+            <p className="text-xs text-gray-600 mt-1 mb-2">{p.summary}</p>
+            <button onClick={() => toggle(p.id)} className="text-xs text-violet-700 hover:text-violet-900 font-semibold underline underline-offset-2 mb-2" type="button">
+              {isOpen ? 'Hide full policy' : 'Read full policy'}
+            </button>
+            {isOpen && (
+              <div className="mt-1 mb-3 p-3 bg-violet-50 border border-violet-100 rounded text-xs text-gray-800 whitespace-pre-line leading-relaxed max-h-64 overflow-y-auto">
+                {p.fullText}
+              </div>
+            )}
+            <label className="flex items-start gap-2 text-sm cursor-pointer mt-1 pt-2 border-t border-gray-100">
+              <input type="checkbox" checked={acked} onChange={e => onChange(Object.assign({}, data, { [p.id]: e.target.checked }))} className="accent-violet-600 mt-0.5" />
+              <span>
+                I have read and acknowledge this policy
+                {!isOpen && !acked && (
+                  <span className="block text-xs text-gray-500 mt-0.5 italic">Tip: open the policy above first to review the full text.</span>
+                )}
+              </span>
+            </label>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const SectionTraining = ({ data, onChange }) => (
+  <div className="space-y-2">
+    <p className="text-sm text-gray-600 mb-3">Enroll in (or mark complete) each training course. Required courses must be completed by the dates noted.</p>
+    {TRAINING.map(t => (
+      <div key={t.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <span className={`w-8 h-8 rounded-full grid place-items-center text-xs ${data[t.id] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+            {data[t.id] ? '✓' : '○'}
+          </span>
+          <div>
+            <div className="text-sm font-medium">{t.title} {t.required && <span className="text-xs text-red-600 font-normal">(required)</span>}</div>
+            <div className="text-xs text-gray-500">{t.duration} · {t.mandatory}</div>
+            {data[t.id] && <div className="text-xs text-green-700 mt-0.5">Completed {fmtDate(data[t.id])}</div>}
+          </div>
+        </div>
+        <button onClick={() => onChange({...data, [t.id]: data[t.id] ? '' : todayISO()})}
+          className={`text-xs px-3 py-1.5 rounded-lg ${data[t.id] ? 'bg-gray-100 text-gray-700' : 'btn-primary'}`}>
+          {data[t.id] ? 'Mark not complete' : 'Mark complete'}
+        </button>
+      </div>
+    ))}
+  </div>
+);
+
+const SectionEquipment = ({ data, onChange }) => (
+  <div className="space-y-2">
+    <p className="text-sm text-gray-600 mb-3">Check each item as it is issued. Required items must be received before the first shift.</p>
+    {EQUIPMENT.map(e => (
+      <label key={e.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer">
+        <input type="checkbox" checked={!!data[e.id]} onChange={ev => onChange({...data, [e.id]: ev.target.checked})} className="accent-violet-600" />
+        <span className="text-sm">{e.label}</span>
+      </label>
+    ))}
+  </div>
+);
+
+const SectionOrientation = ({ data, onChange }) => (
+  <div className="space-y-2">
+    <p className="text-sm text-gray-600 mb-3">Complete each orientation activity in the first week. Your manager or supervisor will sign off.</p>
+    {ORIENTATION.map(o => (
+      <label key={o.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer">
+        <input type="checkbox" checked={!!data[o.id]} onChange={ev => onChange({...data, [o.id]: ev.target.checked})} className="accent-violet-600" />
+        <span className="text-sm">{o.label}</span>
+      </label>
+    ))}
+  </div>
+);
+
+const SECTION_DEFAULTS = {
+  personal: {}, banking: {}, emergency: {},
+  documents: { sin_doc: false, license: false, certs: false, photo_id: false },
+  policies:  Object.fromEntries(POLICIES.map(p => [p.id, false])),
+  training:  Object.fromEntries(TRAINING.map(t => [t.id, ''])),
+  equipment: Object.fromEntries(EQUIPMENT.map(e => [e.id, false])),
+  orientation: Object.fromEntries(ORIENTATION.map(o => [o.id, false])),
+};
+
+const isSectionComplete = (id, data) => {
+  if (!data) return false;
+  switch (id) {
+    case 'personal':  return !!(data.address && data.dob && data.sin && data.citizenship);
+    case 'banking':   return !!(data.bank && data.transit && data.account && data.td1Federal && data.td1Provincial);
+    case 'emergency': return !!(data.name && data.relationship && data.phone);
+    case 'documents': return Object.values(data).every(Boolean);
+    case 'policies':  return POLICIES.every(p => data[p.id]);
+    case 'training':  return TRAINING.filter(t => t.required).every(t => data[t.id]);
+    case 'equipment': return Object.values(data).every(Boolean);
+    case 'orientation': return Object.values(data).filter(Boolean).length >= 4;
+    default: return false;
+  }
+};
+
+/* =========================
+   NEW HIRE — ONBOARDING WIZARD
+========================= */
+const HireOnboarding = ({ state, setState, hire, currentUser }) => {
+  const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
+
+  const updateSection = (sectionId, newData) => {
+    const complete = isSectionComplete(sectionId, newData);
+    setState(prev => {
+      const hires = prev.hires.map(h => {
+        if (h.id !== hire.id) return h;
+        const updated = { ...h, sections: { ...h.sections, [sectionId]: { complete, data: newData } } };
+        updated.status = computeStatus(updated);
+        return updated;
+      });
+      const auditLog = [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Updated ${sectionId} for ${hire.fullName}` + (complete ? ' (section complete)' : '') }];
+      return { ...prev, hires, auditLog };
+    });
+  };
+
+  const submit = () => {
+    const allComplete = SECTIONS.every(s => isSectionComplete(s.id, hire.sections[s.id]?.data || {}));
+    if (!allComplete) { alert('Please complete all sections before submitting.'); return; }
+    setState(prev => {
+      const hires = prev.hires.map(h => h.id === hire.id ? { ...h, status: 'in-review', submittedAt: new Date().toISOString() } : h);
+      const auditLog = [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Submitted onboarding for review: ${hire.fullName}` }];
+      return { ...prev, hires, auditLog };
+    });
+  };
+
+  const resetDemoSubmission = () => {
+    setState(prev => {
+      const hires = prev.hires.map(h => h.id === hire.id ? { ...h, status: 'in-progress', submittedAt: null } : h);
+      return { ...prev, hires };
+    });
+    setActiveSection(SECTIONS[0].id);
+  };
+
+  // If already submitted, show thank-you view instead of the wizard
+  if (hire.status === 'in-review') {
+    const submittedDate = hire.submittedAt ? new Date(hire.submittedAt) : new Date();
+    return (
+      <div className="space-y-5">
+        <div className="rounded-2xl bg-gradient-to-r from-green-700 to-teal-600 text-white p-6 shadow">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-full bg-white/20 grid place-items-center text-3xl flex-shrink-0">
+              ✓
+            </div>
+            <div className="flex-1">
+              <div className="text-sm opacity-90">Submitted for HR review</div>
+              <div className="text-2xl font-bold mt-1">Thanks, {hire.fullName.split(' ')[0]}!</div>
+              <div className="text-sm mt-2 text-green-50">
+                Your onboarding submission has been sent to HR. You'll be notified as each section is approved. Nothing more is required from you right now.
+              </div>
+              <div className="text-xs mt-3 text-green-100">
+                Submitted {submittedDate.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Card title="What happens next">
+          <ol className="space-y-3 text-sm text-gray-700">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 grid place-items-center text-xs font-bold flex-shrink-0">1</span>
+              <div>
+                <div className="font-medium">HR reviews each section</div>
+                <div className="text-xs text-gray-500 mt-0.5">Typical turnaround: 1–2 business days per section. You'll receive email updates as each section is approved or if changes are requested.</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 grid place-items-center text-xs font-bold flex-shrink-0">2</span>
+              <div>
+                <div className="font-medium">Training scheduled</div>
+                <div className="text-xs text-gray-500 mt-0.5">Once policies and documents are approved, HR will schedule your required training (CPR, First Aid, PIPEDA) before your first shift.</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 grid place-items-center text-xs font-bold flex-shrink-0">3</span>
+              <div>
+                <div className="font-medium">Equipment collected on Day 1</div>
+                <div className="text-xs text-gray-500 mt-0.5">Uniform, ID badge, and locker key will be ready when you arrive. Site tour with your supervisor is scheduled for your first day.</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 grid place-items-center text-xs font-bold flex-shrink-0">4</span>
+              <div>
+                <div className="font-medium">Account provisioned</div>
+                <div className="text-xs text-gray-500 mt-0.5">Once all sections are approved, your record is pushed to ShiftFlow (or your existing T&A system) so you can start clocking in from Day 1.</div>
+              </div>
+            </li>
+          </ol>
+        </Card>
+
+        <Card title="Section status">
+          <ul className="space-y-2 text-sm">
+            {SECTIONS.map(s => (
+              <li key={s.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                <span className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 grid place-items-center text-[10px] font-bold">⧗</span>
+                  {s.step} &middot; {s.label}
+                </span>
+                <span className="text-xs text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">In review</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs text-gray-600">
+          <div className="font-semibold text-gray-800 mb-1">Demo control</div>
+          <p>This is a working demo — you can reset your submission and walk through the flow again to show a colleague.</p>
+          <button onClick={resetDemoSubmission} className="mt-2 text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-300 hover:border-violet-400 hover:text-violet-700">
+            ↻ Reset submission &amp; edit again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = computeProgress(hire);
+  const section = SECTIONS.find(s => s.id === activeSection);
+  const sectionData = hire.sections[activeSection]?.data || SECTION_DEFAULTS[activeSection];
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl bg-gradient-to-r from-violet-700 to-violet-600 text-white p-5 shadow">
+        <div className="text-sm opacity-90">Welcome,</div>
+        <div className="text-2xl font-bold">{hire.fullName}</div>
+        <div className="text-sm mt-1 text-violet-100">{hire.position} · Starts {fmtDate(hire.startDate)} · {hire.location}</div>
+        <div className="mt-4">
+          <div className="flex justify-between text-xs mb-1">
+            <span>Onboarding progress</span><span>{progress}%</span>
+          </div>
+          <div className="bg-violet-900/30 h-2 rounded-full overflow-hidden">
+            <div className="bg-white h-full transition-all" style={{width: progress + '%'}} />
+          </div>
+        </div>
+      </div>
+
+      {/* Stepper */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-2">
+        {SECTIONS.map(s => {
+          const sd = hire.sections[s.id]?.data || SECTION_DEFAULTS[s.id];
+          const done = isSectionComplete(s.id, sd);
+          const active = s.id === activeSection;
+          return (
+            <button key={s.id} onClick={() => setActiveSection(s.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border ${
+                active ? 'bg-violet-600 text-white border-violet-600' :
+                done ? 'bg-violet-50 text-violet-700 border-violet-200' :
+                'bg-white text-gray-500 border-gray-200'
+              }`}>
+              <span className={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold ${
+                active ? 'bg-white text-violet-700' : done ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>{done ? '✓' : s.step}</span>
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <Card title={`${section.step} · ${section.label}`}>
+        {activeSection === 'personal' && <SectionPersonal data={sectionData} onChange={d => updateSection('personal', d)} />}
+        {activeSection === 'banking' && <SectionBanking data={sectionData} onChange={d => updateSection('banking', d)} />}
+        {activeSection === 'emergency' && <SectionEmergency data={sectionData} onChange={d => updateSection('emergency', d)} />}
+        {activeSection === 'documents' && <SectionDocuments data={sectionData} onChange={d => updateSection('documents', d)} />}
+        {activeSection === 'policies' && <SectionPolicies data={sectionData} onChange={d => updateSection('policies', d)} />}
+        {activeSection === 'training' && <SectionTraining data={sectionData} onChange={d => updateSection('training', d)} />}
+        {activeSection === 'equipment' && <SectionEquipment data={sectionData} onChange={d => updateSection('equipment', d)} />}
+        {activeSection === 'orientation' && <SectionOrientation data={sectionData} onChange={d => updateSection('orientation', d)} />}
+
+        <div className="mt-5 pt-4 border-t flex justify-between">
+          <button onClick={() => {
+            const idx = SECTIONS.findIndex(s => s.id === activeSection);
+            if (idx > 0) setActiveSection(SECTIONS[idx - 1].id);
+          }} disabled={activeSection === SECTIONS[0].id}
+            className={`px-4 py-2 text-sm rounded-lg border ${activeSection === SECTIONS[0].id ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'}`}>← Previous</button>
+          {activeSection !== SECTIONS[SECTIONS.length - 1].id ? (
+            <button onClick={() => {
+              const idx = SECTIONS.findIndex(s => s.id === activeSection);
+              setActiveSection(SECTIONS[idx + 1].id);
+            }} className="px-4 py-2 text-sm rounded-lg btn-primary">Next →</button>
+          ) : (
+            <button onClick={submit} disabled={progress < 100}
+              className={`px-4 py-2 text-sm rounded-lg ${progress < 100 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'btn-primary'}`}>
+              Submit for review
+            </button>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+/* =========================
+   HR — HIRE DETAIL & REVIEW
+========================= */
+const HireDetail = ({ state, setState, hireId, currentUser, onBack }) => {
+  const hire = state.hires.find(h => h.id === hireId);
+  if (!hire) return null;
+
+  const approve = (sectionId) => {
+    setState(prev => {
+      const hires = prev.hires.map(h => {
+        if (h.id !== hireId) return h;
+        const reviews = { ...h.reviews, [sectionId]: { approved: true, by: currentUser.username, at: new Date().toISOString(), notes: '' } };
+        const updated = { ...h, reviews };
+        updated.status = computeStatus(updated);
+        return updated;
+      });
+      const auditLog = [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Approved ${sectionId} for ${hire.fullName}` }];
+      return { ...prev, hires, auditLog };
+    });
+  };
+
+  const requestChanges = (sectionId) => {
+    const notes = prompt(`Notes for ${hire.fullName} on the ${sectionId} section:`);
+    if (notes === null) return;
+    setState(prev => {
+      const hires = prev.hires.map(h => {
+        if (h.id !== hireId) return h;
+        const sections = { ...h.sections, [sectionId]: { ...h.sections[sectionId], complete: false } };
+        const reviews = { ...h.reviews, [sectionId]: { approved: false, by: currentUser.username, at: new Date().toISOString(), notes } };
+        const updated = { ...h, sections, reviews };
+        updated.status = computeStatus(updated);
+        return updated;
+      });
+      const auditLog = [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Requested changes on ${sectionId} for ${hire.fullName}: "${notes}"` }];
+      return { ...prev, hires, auditLog };
+    });
+  };
+
+  const remove = () => {
+    if (!confirm(`Remove ${hire.fullName} from onboarding pipeline? This deletes the hire record but not their audit log.`)) return;
+    setState(prev => ({
+      ...prev,
+      hires: prev.hires.filter(h => h.id !== hireId),
+      auditLog: [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Removed hire: ${hire.fullName}` }],
+    }));
+    onBack();
+  };
+
+  const pushToShiftFlow = () => {
+    if (!SECTIONS.every(s => hire.sections[s.id]?.complete)) { alert('All sections must be complete before pushing to ShiftFlow.'); return; }
+    if (!SECTIONS.every(s => hire.reviews[s.id]?.approved)) { alert('All sections must be approved by HR before pushing to ShiftFlow.'); return; }
+
+    const shiftFlowRecord = {
+      caregiver: {
+        name: hire.fullName,
+        username: hire.fullName.toLowerCase().split(' ')[0].replace(/[^a-z]/g, ''),
+        email: hire.email,
+        phone: hire.phone,
+        team: hire.location,
+        startDate: hire.startDate,
+        position: hire.position,
+        certs: TRAINING.filter(t => hire.sections.training?.data?.[t.id]).map(t => t.title),
+      },
+      sourceSystem: 'HireFlow',
+      sourceHireId: hire.id,
+      ts: new Date().toISOString(),
+    };
+
+    // Write to shared handoff queue (would be consumed by ShiftFlow)
+    try {
+      const queue = JSON.parse(localStorage.getItem(SHARED_HANDOFF_KEY) || '[]');
+      queue.push(shiftFlowRecord);
+      localStorage.setItem(SHARED_HANDOFF_KEY, JSON.stringify(queue));
+    } catch(e) {}
+
+    setState(prev => {
+      const hires = prev.hires.map(h => h.id === hireId ? { ...h, pushedToShiftFlow: { at: new Date().toISOString(), recordId: shiftFlowRecord.sourceHireId } } : h);
+      const auditLog = [...prev.auditLog, { ts: new Date().toISOString(), by: currentUser.username, action: `Pushed ${hire.fullName} to ShiftFlow staff directory` }];
+      return { ...prev, hires, auditLog };
+    });
+
+    alert(`${hire.fullName} has been pushed to ShiftFlow!\n\nOpen the ShiftFlow demo (bea-fisher-attendance.html) in another tab. Within 5 seconds a toast notification will appear confirming the import, and ${hire.fullName.split(' ')[0]} will show up in the Employees tab.\n\nSign in as any supervisor to see the new record.\n\nUsername: ${hire.fullName.toLowerCase().split(' ')[0].replace(/[^a-z]/g, '')}\nPassword: same as username (must change on first login in production)`);
+  };
+
+  const progress = computeProgress(hire);
+  const allApproved = SECTIONS.every(s => hire.reviews[s.id]?.approved);
+  const readyToPush = progress === 100 && allApproved && !hire.pushedToShiftFlow;
+
+  return (
+    <div className="space-y-5">
+      <button onClick={onBack} className="text-sm text-violet-700 hover:underline">← Back to pipeline</button>
+
+      <Card>
+        <div className="flex flex-wrap justify-between items-start gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">{hire.fullName}</h2>
+            <div className="text-sm text-gray-600 mt-1">{hire.position} · Starts {fmtDate(hire.startDate)} · {hire.location}</div>
+            <div className="text-xs text-gray-500 mt-1">{hire.email} {hire.phone && `· ${hire.phone}`}</div>
+            <div className="mt-2 flex items-center gap-2"><StatusBadge status={computeStatus(hire)} /> <Badge tone="gray">{progress}% complete</Badge></div>
+          </div>
+          <div className="flex gap-2">
+            {readyToPush && (
+              <button onClick={pushToShiftFlow} className="px-3 py-1.5 text-sm rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-medium">
+                Push to ShiftFlow →
+              </button>
+            )}
+            {hire.pushedToShiftFlow && (
+              <a href="./bea-fisher-attendance.html" target="_blank" rel="noopener"
+                 className="px-3 py-1.5 text-sm rounded-lg bg-white border border-teal-600 text-teal-700 hover:bg-teal-50 font-medium">
+                View in ShiftFlow ↗
+              </a>
+            )}
+            {hire.pushedToShiftFlow && (
+              <span className="px-3 py-1.5 text-sm rounded-lg bg-green-100 text-green-800 font-medium">
+                ✓ Pushed to ShiftFlow
+              </span>
+            )}
+            <button onClick={remove} className="px-3 py-1.5 text-sm rounded-lg border text-red-600 hover:bg-red-50">Remove</button>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Onboarding sections">
+        <div className="space-y-2">
+          {SECTIONS.map(s => {
+            const sec = hire.sections[s.id];
+            const review = hire.reviews[s.id];
+            return (
+              <div key={s.id} className="border border-gray-200 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className={`w-9 h-9 rounded-full grid place-items-center text-sm font-mono ${sec?.complete ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-400'}`}>
+                    {sec?.complete ? '✓' : s.step}
+                  </span>
+                  <div>
+                    <div className="font-medium text-sm">{s.label}</div>
+                    <div className="text-xs text-gray-500">
+                      {sec?.complete ? 'Submitted' : 'Not yet submitted'}
+                      {review?.approved && <> · <span className="text-green-700">Approved by {review.by}</span></>}
+                      {review && !review.approved && <> · <span className="text-amber-700">Changes requested: {review.notes}</span></>}
+                    </div>
+                  </div>
+                </div>
+                {sec?.complete && (
+                  <div className="flex gap-2">
+                    {!review?.approved && (
+                      <>
+                        <button onClick={() => approve(s.id)} className="px-2.5 py-1 text-xs rounded-lg bg-green-100 text-green-800 hover:bg-green-200">Approve</button>
+                        <button onClick={() => requestChanges(s.id)} className="px-2.5 py-1 text-xs rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200">Request changes</button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+/* =========================
+   AUDIT LOG VIEW
+========================= */
+const AuditView = ({ state }) => (
+  <Card title="Audit log">
+    <ul className="space-y-2">
+      {[...state.auditLog].reverse().map((a, i) => (
+        <li key={i} className="text-sm border-l-2 border-violet-400 pl-3 py-1">
+          <div className="text-xs text-gray-500">{new Date(a.ts).toLocaleString()} · <span className="font-medium">{a.by}</span></div>
+          <div>{a.action}</div>
+        </li>
+      ))}
+    </ul>
+  </Card>
+);
+
+/* =========================
+   SETTINGS
+========================= */
+const Settings = ({ state, setState }) => {
+  const [orgEdit, setOrgEdit] = useState(state.companyName || 'Demo Care Services');
+  const saveOrg = () => { setState(prev => ({ ...prev, companyName: orgEdit.trim() || 'Demo Care Services' })); alert('Saved.'); };
+  const resetDemo = () => { if (!confirm('Restore the demo data? This replaces everything in HireFlow.')) return; setState(seedData()); alert('Restored.'); };
+  const cleanSlate = () => { if (!confirm('Remove all hires and audit log? Login accounts are kept.')) return; setState(prev => ({ ...prev, hires: [], auditLog: [] })); alert('Cleaned.'); };
+  const clearQueue = () => { if (!confirm('Clear the ShiftFlow handoff queue?')) return; try { localStorage.removeItem(SHARED_HANDOFF_KEY); alert('Cleared.'); } catch(e) {} };
+
+  return (
+    <div className="space-y-5">
+      <Card title="Organization">
+        <Field label="Company / institution name">
+          <div className="flex gap-2">
+            <input value={orgEdit} onChange={e => setOrgEdit(e.target.value)} className="flex-1 border rounded-lg px-3 py-2" />
+            <button onClick={saveOrg} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium">Save</button>
+          </div>
+        </Field>
+      </Card>
+
+      <Card title="ShiftFlow integration">
+        <p className="text-sm text-gray-700">When you push a completed hire to ShiftFlow from the Hire detail view, HireFlow writes the caregiver record to a shared localStorage queue at:</p>
+        <p className="font-mono text-xs bg-gray-100 px-3 py-1 rounded inline-block mt-2">{SHARED_HANDOFF_KEY}</p>
+        <p className="text-sm text-gray-700 mt-3">In a production deployment, this would be an API call to ShiftFlow to provision the new caregiver. For the demo, ShiftFlow can read this key on load to import new caregivers.</p>
+        <button onClick={clearQueue} className="mt-3 px-3 py-1.5 text-sm border rounded-lg">Clear handoff queue</button>
+      </Card>
+
+      <Card title="Reset">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center border border-gray-200 rounded-lg p-3">
+            <div><div className="font-medium text-sm">Restore demo data</div><div className="text-xs text-gray-500">Reload the original three sample hires.</div></div>
+            <button onClick={resetDemo} className="btn-primary px-3 py-1.5 text-sm rounded-lg">Restore</button>
+          </div>
+          <div className="flex justify-between items-center border border-gray-200 rounded-lg p-3">
+            <div><div className="font-medium text-sm">Clean slate</div><div className="text-xs text-gray-500">Remove all hires and audit log. Accounts kept.</div></div>
+            <button onClick={cleanSlate} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-sm rounded-lg">Clear</button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+/* =========================
+   APP SHELL
+========================= */
+const App = () => {
+  const [state, setState] = useState(loadState);
+  const [user, setUser] = useState(null);
+  const [tab, setTab] = useState('dashboard');
+  const [openHireId, setOpenHireId] = useState(null);
+  const [addingHire, setAddingHire] = useState(false);
+
+  useEffect(() => { saveState(state); }, [state]);
+
+  if (!user) return <Login users={state.users} onLogin={setUser} />;
+
+  // New hire sees their own onboarding wizard
+  if (user.role === 'hire') {
+    const myHire = state.hires.find(h => h.userId === user.id);
+    if (!myHire) {
+      return (
+        <div className="min-h-screen">
+          <Header user={user} onLogout={() => setUser(null)} companyName={state.companyName} />
+          <main className="max-w-3xl mx-auto p-4">
+            <Card>
+              <p className="text-sm text-gray-600">You don't have an onboarding record yet. Please contact your HR contact.</p>
+            </Card>
+          </main>
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen">
+        <Header user={user} onLogout={() => setUser(null)} companyName={state.companyName} />
+        <main className="max-w-3xl mx-auto p-4">
+          <HireOnboarding state={state} setState={setState} hire={myHire} currentUser={user} />
+        </main>
+      </div>
+    );
+  }
+
+  // HR / Manager
+  const managers = state.users.filter(u => u.role === 'manager' || u.role === 'hr');
+  const TABS = [
+    { id: 'dashboard', label: 'Pipeline' },
+    { id: 'audit', label: 'Audit log' },
+    { id: 'settings', label: 'Settings' },
+  ];
+
+  const handleAddHire = (data) => {
+    const id = 'h' + newId();
+    const userId = 'u' + newId();
+    setState(prev => {
+      const username = data.fullName.toLowerCase().split(' ')[0].replace(/[^a-z]/g, '');
+      const newUser = { id: userId, username, password: username, name: data.fullName, role: 'hire', email: data.email };
+      const newHire = {
+        id, userId,
+        fullName: data.fullName, email: data.email, phone: data.phone,
+        startDate: data.startDate, position: data.position, location: data.location, managerId: data.managerId,
+        status: 'not-started',
+        sections: emptySections(), reviews: emptyReviews(),
+        pushedToShiftFlow: null,
+        createdAt: new Date().toISOString(), createdBy: user.username,
+      };
+      return {
+        ...prev,
+        users: [...prev.users, newUser],
+        hires: [...prev.hires, newHire],
+        auditLog: [...prev.auditLog, { ts: new Date().toISOString(), by: user.username, action: `Created hire: ${data.fullName} (${data.position || 'unspecified position'})` }],
+      };
+    });
+    setAddingHire(false);
+  };
+
+  return (
+    <div className="min-h-screen">
+      <Header user={user} onLogout={() => setUser(null)} companyName={state.companyName} />
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => { setTab(t.id); setOpenHireId(null); }}
+              className={`px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px ${tab === t.id ? 'tab-active' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>{t.label}</button>
+          ))}
+        </div>
+      </nav>
+      <main className="max-w-6xl mx-auto p-4 sm:p-6">
+        {openHireId ? (
+          <HireDetail state={state} setState={setState} hireId={openHireId} currentUser={user} onBack={() => setOpenHireId(null)} />
+        ) : (
+          <>
+            {tab === 'dashboard' && <HRDashboard state={state} setState={setState} onOpen={setOpenHireId} onAdd={() => setAddingHire(true)} />}
+            {tab === 'audit' && <AuditView state={state} />}
+            {tab === 'settings' && <Settings state={state} setState={setState} />}
+          </>
+        )}
+      </main>
+      <AddHireModal open={addingHire} onClose={() => setAddingHire(false)} onSave={handleAddHire} managers={managers} />
+    </div>
+  );
+};
+
+const Header = ({ user, onLogout, companyName }) => (
+  <header className="bg-white border-b border-gray-200">
+    <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-violet-700 text-white grid place-items-center font-bold text-sm">HC</div>
+        <div>
+          <div className="font-semibold text-gray-800 leading-tight">HireFlow</div>
+          <div className="text-xs text-gray-500 leading-tight">{companyName || 'Demo Care Services'} · onboarding</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="text-right hidden sm:block">
+          <div className="text-sm font-medium text-gray-800">{user.name}</div>
+          <div className="text-xs text-gray-500 capitalize">{user.role === 'hr' ? 'HR Admin' : user.role === 'hire' ? 'New hire' : user.role}</div>
+        </div>
+        <button onClick={onLogout} className="text-sm text-gray-600 hover:text-gray-900 border rounded-lg px-3 py-1.5">Sign out</button>
+      </div>
+    </div>
+  </header>
+);
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

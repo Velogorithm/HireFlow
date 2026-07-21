@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#100F0D" />
+<title>HireFlow — Hiring & Onboarding | Velogorithm</title>
+<meta name="description" content="HireFlow is Velogorithm's hiring and onboarding platform for Canadian operators — full lifecycle from job posting through the 90-day probationary period. Standalone or deeply integrated with ShiftFlow." />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #0a0908; --surface: #15130f; --surface-2: #1c1a16; --border: #2a2725;
+    --text: #f5efe6; --muted: #a8a195; --gold: #d4a857; --gold-soft: #f0d999;
+    --violet: #8B5CF6; --violet-deep: #6D28D9; --teal: #14b8a6; --teal-deep: #0F766E;
+    --blue: #38BDF8; --blue-deep: #0284C7;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .font-display { font-family: 'Georgia', serif; letter-spacing: -0.01em; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .section { border-top: 1px solid var(--border); }
+  .gold { color: var(--gold); }
+  .violet { color: var(--violet); }
+  .teal { color: var(--teal); }
+  .bg-surface { background: var(--surface); }
+  .bg-surface-2 { background: var(--surface-2); }
+  .border-cust { border-color: var(--border); }
+  .btn-primary { background: var(--gold); color: #0a0908; padding: 12px 22px; border-radius: 6px; font-weight: 600; display: inline-block; }
+  .btn-primary:hover { background: var(--gold-soft); }
+  .btn-ghost { border: 1px solid var(--border); padding: 12px 22px; border-radius: 6px; font-weight: 600; display: inline-block; color: var(--text); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
+  .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+  .price-featured { border: 2px solid var(--gold); }
+  .check::before { content: "\2713"; color: var(--teal); font-weight: 700; margin-right: 8px; }
+  .dash::before { content: "\2014"; color: var(--muted); margin-right: 8px; }
+  .pulse { animation: pulse 2.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+</style>
+</head>
+<body>
+
+<header class="border-b border-cust">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="https://velogorithm.com" class="flex items-center gap-2.5">
+      <svg width="32" height="36" viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="vgH" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#A06A1A"/><stop offset="40%" stop-color="#C8941E"/>
+          <stop offset="75%" stop-color="#E8B14A"/><stop offset="100%" stop-color="#F5CC74"/>
+        </linearGradient></defs>
+        <path fill="url(#vgH)" d="M 60 90 L 135 90 L 200 250 L 265 90 L 340 90 L 200 340 Z"/>
+        <path fill="url(#vgH)" d="M 240 90 L 280 10 L 305 60 L 322 30 L 348 90 Z"/>
+      </svg>
+      <div>
+        <div class="font-bold leading-tight">Velogorithm</div>
+        <div class="text-xs text-gray-400 leading-tight">Edmonton, Alberta</div>
+      </div>
+    </a>
+    <nav class="hidden md:flex gap-6 text-sm" style="color: var(--muted);">
+      <a href="https://velogorithm.com#products" class="hover:text-white">Products</a>
+      <a href="./shiftflow.html" class="hover:text-white">ShiftFlow</a>
+      <a href="#hireflow" class="text-white">HireFlow</a>
+      <a href="https://velogorithm.com#contact" class="hover:text-white">Contact</a>
+    </nav>
+    <a href="https://velogorithm.com#contact" class="btn-primary text-sm">Book a Walkthrough</a>
+  </div>
+</header>
+
+<section id="hireflow">
+  <div class="max-w-6xl mx-auto px-6 py-16 md:py-24">
+    <div class="eyebrow">PRODUCT &mdash; P/04 &middot; UPDATED FOR 2026</div>
+    <div class="mt-3 mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full" style="background: rgba(212,168,87,0.12); border: 1px solid var(--gold);">
+      <span class="pulse w-2 h-2 rounded-full bg-yellow-400 inline-block"></span>
+      <span class="text-xs font-semibold gold">Now covers the full hiring lifecycle</span>
+    </div>
+    <h1 class="font-display text-5xl md:text-6xl font-bold leading-tight">
+      HireFlow.<br/>
+      <span class="gold">From hire to first shift, structured.</span>
+    </h1>
+    <p class="text-lg md:text-xl mt-6 max-w-3xl" style="color: var(--muted);">
+      A hiring and onboarding platform for Canadian operators with shift-based teams. Job postings, applicants, interviews, offers, onboarding, and the 90-day probationary period &mdash; in one place. Standalone, or deeply synced with ShiftFlow so a new hire arrives complete.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="./hireflow-manager.html" class="btn-primary">Try the live demo &rarr;</a>
+      <a href="https://velogorithm.com#contact" class="btn-ghost">Book a walkthrough</a>
+    </div>
+
+    <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-surface border border-cust rounded-lg p-4">
+        <div class="text-3xl font-bold gold">7</div>
+        <div class="text-xs uppercase tracking-wider mt-1" style="color: var(--muted);">Modules</div>
+        <div class="text-xs mt-0.5">Jobs &rarr; 90 days</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-4">
+        <div class="text-3xl font-bold gold">2</div>
+        <div class="text-xs uppercase tracking-wider mt-1" style="color: var(--muted);">Pricing models</div>
+        <div class="text-xs mt-0.5">Standalone + bundled</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-4">
+        <div class="text-3xl font-bold gold">15%</div>
+        <div class="text-xs uppercase tracking-wider mt-1" style="color: var(--muted);">Bundle discount</div>
+        <div class="text-xs mt-0.5">HF + SF Standard</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-4">
+        <div class="text-3xl font-bold gold">5 days</div>
+        <div class="text-xs uppercase tracking-wider mt-1" style="color: var(--muted);">To go-live</div>
+        <div class="text-xs mt-0.5">From signed SOW</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="max-w-6xl mx-auto px-6 py-20">
+    <div class="eyebrow">01 &mdash; What's inside</div>
+    <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-8">Seven modules. <span class="gold">One workflow.</span></h2>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">01 &middot; JOBS</div>
+        <h3 class="font-bold text-lg mb-1">Post and manage openings</h3>
+        <p class="text-sm" style="color: var(--muted);">Create, publish, edit, close. Standard tier auto-posts to Indeed and LinkedIn.</p>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">02 &middot; APPLICANTS</div>
+        <h3 class="font-bold text-lg mb-1">Pipeline + status</h3>
+        <p class="text-sm" style="color: var(--muted);">Applied &rarr; Screening &rarr; Interview &rarr; Offered &rarr; Hired. Filter, advance, reject, take notes.</p>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">03 &middot; INTERVIEWS</div>
+        <h3 class="font-bold text-lg mb-1">Schedule and score</h3>
+        <p class="text-sm" style="color: var(--muted);">Google / Outlook calendar sync. Structured scorecards. Pass/fail auto-advances the candidate.</p>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">04 &middot; OFFERS</div>
+        <h3 class="font-bold text-lg mb-1">Letters + e-signature</h3>
+        <p class="text-sm" style="color: var(--muted);">Templated offer letters, DocuSeal / HelloSign integration, audit trail on signature.</p>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">05 &middot; ONBOARDING</div>
+        <h3 class="font-bold text-lg mb-1">Multi-track workflows</h3>
+        <p class="text-sm" style="color: var(--muted);">First-day checklist, policy ack, document upload, certification capture, video orientation.</p>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs uppercase tracking-wider gold font-bold mb-2">06 &middot; FIRST 90 DAYS</div>
+        <h3 class="font-bold text-lg mb-1">Probationary tracking</h3>
+        <p class="text-sm" style="color: var(--muted);">30/60/90 check-in scorecards. Confirm / extend / part-ways decision at Day 90.</p>
+      </div>
+    </div>
+
+    <div class="mt-6 p-5 bg-surface-2 border border-cust rounded-lg">
+      <div class="text-xs uppercase tracking-wider gold font-bold mb-2">07 &middot; SETTINGS + INTEGRATIONS</div>
+      <div class="text-sm" style="color: var(--muted);">Organization config, ShiftFlow integration toggle, payroll exports (CSV ready for Ceridian / ADP / Payworks / QuickBooks), e-signature provider, branding.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="max-w-6xl mx-auto px-6 py-20">
+    <div class="eyebrow">02 &mdash; Two ways to buy</div>
+    <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-2">Standalone, <span class="gold">or bundled with ShiftFlow.</span></h2>
+    <p class="text-lg max-w-3xl" style="color: var(--muted);">
+      HireFlow works on its own &mdash; use it with whatever time-and-attendance system you already have. But if you also use ShiftFlow, the deep sync turns the two into a single workforce platform: a hire onboarded in HireFlow arrives in ShiftFlow with their certifications, shifts, and leave balances already set up.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-6 mt-10">
+
+      <div class="bg-surface border border-cust rounded-lg p-7">
+        <div class="text-xs uppercase tracking-wider font-bold mb-2" style="color: var(--blue);">MODEL 1</div>
+        <h3 class="font-display text-2xl font-bold mb-2">HireFlow Standalone</h3>
+        <p class="text-sm mb-5" style="color: var(--muted);">For operators who use another time and attendance system. HireFlow covers hiring and onboarding; finished hires export as CSV.</p>
+
+        <div class="space-y-2 text-sm mb-5">
+          <div class="check">Full 7-module workflow (jobs &rarr; 90 days)</div>
+          <div class="check">CSV export to your existing T&amp;A system</div>
+          <div class="check">PIPEDA/PHIPA-aligned</div>
+          <div class="check">Email + Indeed posting (Standard+)</div>
+          <div class="dash" style="color: var(--muted);">No automatic worker creation in another system</div>
+        </div>
+
+        <div class="border-t border-cust pt-4">
+          <div class="text-xs uppercase tracking-wider" style="color: var(--muted);">Starting at</div>
+          <div class="text-3xl font-bold gold">$200 <span class="text-base" style="color: var(--muted);">/ month</span></div>
+          <div class="text-xs mt-1" style="color: var(--muted);">Starter tier &mdash; 5 concurrent active hires + $1,500 setup</div>
+        </div>
+      </div>
+
+      <div class="bg-surface price-featured rounded-lg p-7" style="background: linear-gradient(180deg, rgba(212,168,87,0.08) 0%, var(--surface) 100%);">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs uppercase tracking-wider font-bold gold">MODEL 2 &middot; RECOMMENDED</div>
+          <span class="tag" style="background: var(--gold); color: #0a0908;">15% OFF</span>
+        </div>
+        <h3 class="font-display text-2xl font-bold mb-2">HireFlow + ShiftFlow Deep Sync</h3>
+        <p class="text-sm mb-5" style="color: var(--muted);">When you buy both at Standard tier, they share a backend. Single platform, single audit trail, single bill.</p>
+
+        <div class="space-y-2 text-sm mb-5">
+          <div class="check">Everything in standalone</div>
+          <div class="check"><strong>Auto-create</strong> in ShiftFlow when offer is signed</div>
+          <div class="check">Shared certifications + expiry alerts</div>
+          <div class="check">Unified audit trail across both products</div>
+          <div class="check">Single CSM, single SLA, single invoice</div>
+        </div>
+
+        <div class="border-t border-cust pt-4">
+          <div class="text-xs uppercase tracking-wider" style="color: var(--muted);">HF + SF Standard bundle</div>
+          <div class="text-3xl font-bold gold">$723 <span class="text-base" style="color: var(--muted);">/ month</span></div>
+          <div class="text-xs mt-1" style="color: var(--muted);">Both at Standard tier &middot; $5,000 unified setup &middot; annual commitment</div>
+          <div class="text-xs mt-1" style="color: var(--gold);">Saves ~$1,520/year vs buying separately</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mt-8 p-5 bg-surface-2 border border-cust rounded-lg text-sm" style="color: var(--muted);">
+      <strong style="color: var(--text);">A note on tiers:</strong> HireFlow tiers (Starter / Standard / Enterprise) match ShiftFlow tiers conceptually. Starter is single-kiosk and browser-local; Standard adds the shared backend, multi-device sync, and the deep integration; Enterprise adds SSO, Canadian data residency, and SOC 2. Bundle discounts apply when both products are at the same tier level.
+    </div>
+  </div>
+</section>
+
+<section class="section bg-surface-2">
+  <div class="max-w-6xl mx-auto px-6 py-20">
+    <div class="eyebrow">03 &mdash; How the deep sync works</div>
+    <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-8">When an offer is signed, <span class="gold">the worker arrives complete.</span></h2>
+
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs gold font-bold mb-1">STEP 1</div>
+        <div class="text-sm font-semibold mb-1">Offer signed in HireFlow</div>
+        <div class="text-xs" style="color: var(--muted);">Candidate e-signs the offer letter via DocuSeal / HelloSign. Status auto-advances to Hired.</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs gold font-bold mb-1">STEP 2</div>
+        <div class="text-sm font-semibold mb-1">API call to ShiftFlow</div>
+        <div class="text-xs" style="color: var(--muted);">HireFlow POSTs the hire's record (name, certs, start date, leave balance) to ShiftFlow's API.</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs gold font-bold mb-1">STEP 3</div>
+        <div class="text-sm font-semibold mb-1">Worker created in ShiftFlow</div>
+        <div class="text-xs" style="color: var(--muted);">Same employee_id used in both products. First-week shifts auto-scheduled based on role default.</div>
+      </div>
+      <div class="bg-surface border border-cust rounded-lg p-5">
+        <div class="text-xs gold font-bold mb-1">STEP 4</div>
+        <div class="text-sm font-semibold mb-1">Unified audit trail</div>
+        <div class="text-xs" style="color: var(--muted);">Every event in either product writes to the same audit log. Full lifecycle: applied &rarr; hired &rarr; first shift &rarr; 90-day decision.</div>
+      </div>
+    </div>
+
+    <div class="mt-8 p-5 bg-surface border border-cust rounded-lg">
+      <div class="text-xs uppercase tracking-wider gold font-bold mb-2">SHARED INFRASTRUCTURE</div>
+      <p class="text-sm" style="color: var(--muted);">Both products run on Cloudflare D1 in WNAM region (Standard tier) or the customer's Canadian-resident instance (Enterprise). Tenant isolation is enforced at every database query &mdash; one customer's data never crosses to another. The deep sync is technically a series of internal API calls within the same tenant_id, not a cross-organization data flow.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="max-w-6xl mx-auto px-6 py-20">
+    <div class="eyebrow">04 &mdash; Built for the same 50&ndash;300 staff operator as ShiftFlow</div>
+    <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-4">If you hire <span class="gold">15+ people a year</span>, you'll feel the difference.</h2>
+    <p class="text-lg max-w-3xl mb-8" style="color: var(--muted);">
+      HireFlow is purpose-built for Canadian operators with frequent hiring cycles &mdash; disability supports, long-term care, retirement, home care, security services, hospitality, manufacturing, field services. Same ICP as ShiftFlow, so we sell into the same conversations.
+    </p>
+
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="p-5 border border-cust rounded-lg">
+        <div class="text-3xl font-bold gold">15+</div>
+        <div class="text-sm font-semibold mt-2">New hires per year</div>
+        <div class="text-xs mt-1" style="color: var(--muted);">Below 15, the workflow can stay on paper. Above 15, the admin burden of paper becomes visible.</div>
+      </div>
+      <div class="p-5 border border-cust rounded-lg">
+        <div class="text-3xl font-bold gold">50&ndash;300</div>
+        <div class="text-sm font-semibold mt-2">Total staff range</div>
+        <div class="text-xs mt-1" style="color: var(--muted);">Mid-market sweet spot. Smaller customers fit Starter, larger fit Standard, 300+ fit Enterprise.</div>
+      </div>
+      <div class="p-5 border border-cust rounded-lg">
+        <div class="text-3xl font-bold gold">Canada</div>
+        <div class="text-sm font-semibold mt-2">PIPEDA-aligned by default</div>
+        <div class="text-xs mt-1" style="color: var(--muted);">PHIPA-aligned config on Enterprise. Canadian data residency on Enterprise (Montreal default).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="max-w-6xl mx-auto px-6 py-20 text-center">
+    <h2 class="font-display text-3xl md:text-5xl font-bold">Try the live demo, or talk to us.</h2>
+    <p class="text-lg mt-3 max-w-2xl mx-auto" style="color: var(--muted);">The demo runs in your browser with seeded sample data &mdash; 5 jobs, 12 applicants in various stages, one active onboarding. Click around. Toggle the ShiftFlow sync in Settings to see what the integration looks like.</p>
+    <div class="mt-8 flex flex-wrap gap-3 justify-center">
+      <a href="./hireflow-manager.html" class="btn-primary">Open the live demo &rarr;</a>
+      <a href="https://velogorithm.com#contact" class="btn-ghost">Book a walkthrough</a>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-cust mt-0">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="grid md:grid-cols-4 gap-8 text-sm">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2 mb-2">
+          <svg width="24" height="27" viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="vgF" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#A06A1A"/><stop offset="40%" stop-color="#C8941E"/>
+              <stop offset="75%" stop-color="#E8B14A"/><stop offset="100%" stop-color="#F5CC74"/>
+            </linearGradient></defs>
+            <path fill="url(#vgF)" d="M 60 90 L 135 90 L 200 250 L 265 90 L 340 90 L 200 340 Z"/>
+            <path fill="url(#vgF)" d="M 240 90 L 280 10 L 305 60 L 322 30 L 348 90 Z"/>
+          </svg>
+          <div class="font-bold">Velogorithm</div>
+        </div>
+        <p style="color: var(--muted);">Workforce software for Canadian operators. Engineered in Edmonton, Alberta.</p>
+      </div>
+      <div>
+        <div class="text-xs uppercase tracking-wider mb-2" style="color: var(--muted);">Products</div>
+        <ul class="space-y-1.5">
+          <li><a href="./shiftflow.html" class="hover:text-white" style="color: var(--muted);">ShiftFlow</a></li>
+          <li><a href="#hireflow" class="hover:text-white" style="color: var(--muted);">HireFlow</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-xs uppercase tracking-wider mb-2" style="color: var(--muted);">Company</div>
+        <ul class="space-y-1.5">
+          <li><a href="https://velogorithm.com#about" class="hover:text-white" style="color: var(--muted);">About</a></li>
+          <li><a href="https://velogorithm.com#contact" class="hover:text-white" style="color: var(--muted);">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-8 pt-6 border-t border-cust text-xs" style="color: var(--muted);">
+      &copy; 2026 Velogorithm. All rights reserved. HireFlow is a product of Velogorithm.
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

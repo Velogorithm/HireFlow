@@ -1,0 +1,8 @@
+# Cloudflare Pages _headers for hireflow.velogorithm.com
+
+/*
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
